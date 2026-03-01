@@ -1,26 +1,102 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/native-stack";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 
-// import screens
-import HomeScreen from "./src/screens/HomeScreen";
+//import Onboarding Screens ** FILE NAMES TO BE CHANGED
 import LoginScreen from "./src/screens/LoginScreen";
-import MapScreen from "./src/screens/MapScreen";
+import PasswordScreen from "./src/screens/PasswordScreen";
+import LocationPermScreen from "./src/screens/LocationPermScreen";
+
+// import Tab Screens ** FILE NAMES TO BE CHANGED
+import Tab1Screen from "./src/screens/Tab1Screen";
+import Tab2Screen from "./src/screens/Tab2Screen";
+import Tab3Screen from "./src/screens/Tab3Screen";
+import Tab4Screen from "./src/screens/Tab4Screen";
+
+// import Settings Screen ** FILE NAMES TO BE CHANGED
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 //navigators
-// const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+//Functions (Each Tab has its own stack within!) ** DUE TO CHANGE
+// ATM The SettingsScreen can be accessed from each tab just as place holders
+function Tab1Stack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Tab1" component={Tab1Screen} />
+      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
+    </Stack.Navigator>
+  );
+}
+
+function Tab2Stack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Tab2" component={Tab2Screen} />
+      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
+    </Stack.Navigator>
+  );
+}
+
+function Tab3Stack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Tab3" component={Tab3Screen} />
+      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
+    </Stack.Navigator>
+  );
+}
+
+function Tab4Stack() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Tab4" component={Tab4Screen} />
+      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
+    </Stack.Navigator>
+  );
+}
+
+//Main Navigation Bar at Bottom, holding all Tabs
+function MainTabs() {
+  return (
+    <Tab.Navigator>
+      <Tab.Screen
+        name="1"
+        component={Tab1Stack}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="2"
+        component={Tab2Stack}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="3"
+        component={Tab3Stack}
+        options={{ headerShown: false }}
+      />
+      <Tab.Screen
+        name="4"
+        component={Tab4Stack}
+        options={{ headerShown: false }}
+      />
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Login" component={LoginScreen} />
-        <Tab.Screen name="Map" component={MapScreen} />
-      </Tab.Navigator>
+      <Stack.Navigator>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Password" component={PasswordScreen} />
+        <Stack.Screen name="LocationPerm" component={LocationPermScreen} />
+        <Stack.Screen name="MainTabs" component={MainTabs} />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }

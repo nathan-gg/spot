@@ -1,16 +1,16 @@
 import { View, Text } from "react-native";
 
-export default function HomeScreen() {
+export default function Tab2Screen() {
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#a2ff00",
+        backgroundColor: "#2b00ff",
       }}
     >
-      <Text>Home</Text>
+      <Text>Tab 2</Text>
     </View>
   );
 }

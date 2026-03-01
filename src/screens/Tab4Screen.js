@@ -1,16 +1,16 @@
 import { View, Text } from "react-native";
 
-export default function MapScreen() {
+export default function Tab4Screen() {
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#2b00ff",
+        backgroundColor: "#9dadff",
       }}
     >
-      <Text>Map</Text>
+      <Text>Tab 4</Text>
     </View>
   );
 }
