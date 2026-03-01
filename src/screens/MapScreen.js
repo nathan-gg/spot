@@ -6,6 +6,8 @@ import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 
 import styles from "../styles";
 
+// tuff
+
 export default function App() {
   const apiKey = process.env.EXPO_PUBLIC_API_KEY;
   console.log(apiKey);
