@@ -18,6 +18,9 @@ import Tab4Screen from "./src/screens/Tab4Screen";
 // import Settings Screen ** FILE NAMES TO BE CHANGED
 import SettingsScreen from "./src/screens/SettingsScreen";
 
+// import MapScreen ** FILE NAMES TO BE CHANGED
+import MapScreen from "./src/screens/MapScreen";
+
 //navigators
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -125,3 +128,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+
+// THIS IS THE FUNCTION TO SHOW THE MAP SCREEN
+
+// export default function App() {
+//   return <MapScreen />;
+// }
