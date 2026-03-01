@@ -92,10 +92,26 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Password" component={PasswordScreen} />
-        <Stack.Screen name="LocationPerm" component={LocationPermScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Password"
+          component={PasswordScreen}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen
+          name="LocationPerm"
+          component={LocationPermScreen}
+          options={{ headerShown: true }}
+        />
+        <Stack.Screen
+          name="MainTabs"
+          component={MainTabs}
+          options={{ headerShown: false, gestureEnabled: false }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

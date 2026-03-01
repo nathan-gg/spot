@@ -7,7 +7,7 @@ export default function Tab2Screen() {
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#2b00ff",
+        backgroundColor: "#bcf8f6",
       }}
     >
       <Text>Tab 2</Text>

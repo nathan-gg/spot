@@ -11,7 +11,7 @@ export default function LocationPermScreen({ navigation }) {
       }}
     >
       <Text>Asking for Location Permission</Text>
-      <TouchableOpacity onPress={() => navigation.navigate("MainTabs")}>
+      <TouchableOpacity onPress={() => navigation.replace("MainTabs")}>
         <Text>Continue</Text>
       </TouchableOpacity>
     </View>
