@@ -1,17 +1,17 @@
 import { View, Text, TouchableOpacity } from "react-native";
 
-export default function LoginScreen({ navigation }) {
+export default function PasswordScreen({ navigation }) {
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#ff9b9b",
+        backgroundColor: "#ffbb9b",
       }}
     >
-      <Text>Login Screen: email, apple, google, #</Text>
-      <TouchableOpacity onPress={() => navigation.navigate("Password")}>
+      <Text>Skimming Passwords here</Text>
+      <TouchableOpacity onPress={() => navigation.navigate("LocationPerm")}>
         <Text>Continue</Text>
       </TouchableOpacity>
     </View>
