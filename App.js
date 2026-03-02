@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   },
 });
 
-
 // THIS IS THE FUNCTION TO SHOW THE MAP SCREEN
 
 // export default function App() {
