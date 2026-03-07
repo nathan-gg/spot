@@ -72,9 +72,14 @@ function MainTabs() {
         component={Tab1Stack}
         options={{ headerShown: false }}
       />
-      <Tab.Screen
+      {/* <Tab.Screen
         name="2"
         component={Tab2Stack}
+        options={{ headerShown: false }}
+      /> */}
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen
