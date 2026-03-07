@@ -7,7 +7,8 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 Citations & Learning Resources (Organized By Source):
 
 - APIs
-    - 
+    - Google Geolocation API https://developers.google.com/maps/documentation/geolocation/overview
+    - Vancouver Open Data API https://opendata.vancouver.ca/explore/dataset/parking-meters/api/
 
 - Component Libraries
   - React Native Bottom Sheet by Gorhom https://gorhom.dev/react-native-bottom-sheet/
@@ -28,6 +29,6 @@ Citations & Learning Resources (Organized By Source):
   - FlatList https://reactnative.dev/docs/flatlist
   - 
 
-- YouTube
+- General Research
   - How to Present a React Native Bottom Sheet https://www.youtube.com/watch?v=oIEykI5oagI
   - 
