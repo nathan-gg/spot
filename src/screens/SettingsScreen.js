@@ -1,4 +1,5 @@
-import { View, Text } from "react-native";
+import { Button, StyleSheet, Text, View } from "react-native";
+import { firebase_auth } from "../firebaseConfig";
 
 export default function SettingsScreen() {
   return (
@@ -11,6 +12,8 @@ export default function SettingsScreen() {
       }}
     >
       <Text>This is the Settings Screen</Text>
+      <Button onPress={() => firebase_auth.signOut()} title="Sign Out" />
     </View>
   );
 }
+
