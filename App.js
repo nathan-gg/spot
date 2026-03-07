@@ -20,6 +20,8 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 
 // import MapScreen ** FILE NAMES TO BE CHANGED
 import MapScreen from "./src/screens/MapScreen";
+import SavedScreen from "./src/screens/SavedScreen.js";
+import HomeScreen from "./src/screens/HomeScreen.js";
 
 //navigators
 const Stack = createNativeStackNavigator();
@@ -30,7 +32,7 @@ const Tab = createBottomTabNavigator();
 function Tab1Stack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Tab1" component={Tab1Screen} />
+      <Stack.Screen name="Tab 1" component={Tab1Screen} />
       {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
     </Stack.Navigator>
   );
@@ -39,7 +41,7 @@ function Tab1Stack() {
 function Tab2Stack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Tab2" component={Tab2Screen} />
+      <Stack.Screen name="Tab 2" component={Tab2Screen} />
       {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
     </Stack.Navigator>
   );
@@ -48,7 +50,7 @@ function Tab2Stack() {
 function Tab3Stack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Tab3" component={Tab3Screen} />
+      <Stack.Screen name="Tab 3" component={Tab3Screen} />
       {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
     </Stack.Navigator>
   );
@@ -57,7 +59,7 @@ function Tab3Stack() {
 function Tab4Stack() {
   return (
     <Stack.Navigator>
-      <Stack.Screen name="Tab4" component={Tab4Screen} />
+      <Stack.Screen name="Tab 4" component={Tab4Screen} />
       {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
     </Stack.Navigator>
   );
@@ -68,28 +70,23 @@ function MainTabs() {
   return (
     <Tab.Navigator>
       <Tab.Screen
-        name="1"
-        component={Tab1Stack}
+        name="Home"
+        component={HomeScreen}
         options={{ headerShown: false }}
       />
-      {/* <Tab.Screen
-        name="2"
-        component={Tab2Stack}
-        options={{ headerShown: false }}
-      /> */}
       <Tab.Screen
         name="Map"
         component={MapScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="3"
-        component={Tab3Stack}
+        name="Saved"
+        component={SavedScreen}
         options={{ headerShown: false }}
       />
       <Tab.Screen
-        name="4"
-        component={Tab4Stack}
+        name="Settings"
+        component={SettingsScreen}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
@@ -133,9 +130,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-
-// THIS IS THE FUNCTION TO SHOW THE MAP SCREEN
-
-// export default function App() {
-//   return <MapScreen />;
-// }

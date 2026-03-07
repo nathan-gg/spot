@@ -1,16 +1,16 @@
 import { View, Text } from "react-native";
 
-export default function SettingsScreen() {
+export default function HomeScreen() {
   return (
     <View
       style={{
         flex: 1,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#ffe371",
+        backgroundColor: "#ff9ae7",
       }}
     >
-      <Text>This is the Settings Screen</Text>
+      <Text>This is the Saved Screen</Text>
     </View>
   );
 }
