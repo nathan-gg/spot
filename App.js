@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { firebase_auth } from "./src/firebaseConfig";
 import ProtectedAreaScreen from "./src/screens/ProtectedAreaScreen";
 import SignInScreen from "./src/screens/SignInScreen";
+import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
 
 //import Onboarding Screens ** FILE NAMES TO BE CHANGED
 import LoginScreen from "./src/screens/LoginScreen";
@@ -115,11 +116,11 @@ function MainTabs() {
       })}
     >
       {/* Tab names are 1 2 3 4 — rename when screens are finalized */}
-      <Tab.Screen
+      {/* <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Map"
         component={MapScreen}
@@ -143,17 +144,31 @@ function MainTabs() {
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [mapPreference, setMapPreference] = useState(null);
   const ProtectedStack = createNativeStackNavigator();
+
+  useEffect(() => {
+    async function checkMapPreference() {
+      const preference = await AsyncStorage.getItem("mapPreference");
+      setMapPreference(preference);
+    }
+    checkMapPreference();
+  }, []);
 
   function ProtectedLayout() {
     return (
       <ProtectedStack.Navigator>
+        {!mapPreference && (
+          <ProtectedStack.Screen
+            name="MapPreference"
+            component={MapPreferenceScreen}
+          />
+        )}
         <ProtectedStack.Screen
           name="MainTabs"
           component={MainTabs}
           options={{ headerShown: false, gestureEnabled: false }}
         />
-        {/* you can add more private screens here (e.g., Profile, Settings) */}
       </ProtectedStack.Navigator>
     );
   }
@@ -184,12 +199,13 @@ export default function App() {
           />
         ) : (
           // IF NOT LOGGED IN: render the Sign In Screen.
-          // * <Stack.Screen name="SignIn" component={SignInScreen} />
-          <Stack.Screen
-            name="ProtectedArea"
-            component={ProtectedLayout}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="SignIn" component={SignInScreen} />
+          // <Stack.Screen
+          //   name="ProtectedArea"
+          //   component={ProtectedLayout}
+          //   options={{ headerShown: false }}
+          // />
+          // <Stack.Screen name="MapPreference" component={MapPreferenceScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

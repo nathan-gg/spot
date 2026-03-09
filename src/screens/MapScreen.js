@@ -5,6 +5,7 @@ import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Marker } from "react-native-maps";
 import { getParkingData } from "../data/parkingData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import styles from "../styles";
 
@@ -85,8 +86,8 @@ export default function App() {
     })();
   }, []);
 
-  function handleMarkerPress(parkingSpot) {
-    console.log("Marker pressed: ", parkingSpot);
+  function handleMarkerPress(spot) {
+    console.log("Marker pressed: ", spot);
   }
 
   return (
