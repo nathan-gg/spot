@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { Marker } from "react-native-maps";
+import { getParkingData } from "../data/parkingData";
 
 import styles from "../styles";
 
@@ -15,6 +17,7 @@ export default function App() {
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
+  const [parkingSpots, setParkingSpots] = useState([]); //
 
   // initialize Geocoder with Google Maps API Key
   Geocoder.init(apiKey);
@@ -29,10 +32,17 @@ export default function App() {
       // fetch geocoding data from Google
       const json = await Geocoder.from(searchLocation);
       const location = json.results[0].geometry.location;
+      const lat = location.lat;
+      const lng = location.lng;
+
+      // get data from parkingData.js to put markers on the map for parking spots
+      const spots = await getParkingData(lat, lng);
+      setParkingSpots(spots);
 
       const searchedLocation = {
         latitude: location.lat,
         longitude: location.lng,
+
         // Delta values determine the "zoom" spread of the view
         latitudeDelta: 0.1,
         longitudeDelta: 0.1,
@@ -67,13 +77,17 @@ export default function App() {
       if (location) {
         setCurrentLocation(location);
         console.log(
-          `Current location: lat: ${currentLocationlocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
+          `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         );
       } else {
         console.log("Current location not obtained");
       }
     })();
   }, []);
+
+  // function handleMarkerPress(spot) {
+  //   console.log("Marker pressed: ", spot);
+  // }
 
   return (
     <View style={styles.container}>
@@ -107,7 +121,20 @@ export default function App() {
         showsUserLocation // show the blue dot for user's position
         // use Google Maps on Android on both Android and iOS
         provider={PROVIDER_GOOGLE}
-      />
+      >
+        {parkingSpots.map((parkingSpot) => (
+          <Marker
+            key={parkingSpot.id}
+            coordinate={{
+              latitude: parkingSpot.latitude,
+              longitude: parkingSpot.longitude,
+            }}
+            title={parkingSpot.type}
+            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            onPress={() => handleMarkerPress(parkingSpot)}
+          />
+        ))}
+      </MapView>
     </View>
   );
 }
