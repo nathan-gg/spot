@@ -75,7 +75,46 @@ function Tab4Stack() {
 //Main Navigation Bar at Bottom, holding all Tabs
 function MainTabs() {
   return (
-    <Tab.Navigator>
+    <Tab.Navigator /* Options and Effects wrote in here - as it applies to all Tabs */
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        animation: "fade" /* fade between tab navigation */,
+        tabBarShowLabel: false /* no labels in nav bar */,
+
+        // placeholder boxes, replace with icons later
+        tabBarIcon: ({ focused }) => {
+          return (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 6,
+                marginTop: 20,
+                backgroundColor: focused
+                  ? "rgba(255,255,255,0.9)" // ** active box color
+                  : "rgba(255,255,255,0.25)", // ** inactive box color
+              }}
+            />
+          );
+        },
+
+        // transparent bar
+        tabBarStyle: {
+          position: "absolute", // floats over screen content
+          bottom: 30 /* bottom gap */,
+          marginRight: 25,
+          marginLeft: 25,
+          borderRadius: 60,
+          height: 60,
+          backgroundColor: "rgba(0, 0, 0, 0.45)", // color & transparency
+          shadowColor: "#000000",
+          shadowOffset: { width: 1, height: 1 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+        },
+      })}
+    >
+      {/* Tab names are 1 2 3 4 — rename when screens are finalized */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
