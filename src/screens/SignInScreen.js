@@ -48,6 +48,15 @@ export default function SignInScreen() {
       alert(error.message);
     }
   }
+
+  async function handleSkip() {
+    try {
+      await signInWithEmailAndPassword(auth, "nsgebreab@gmail.com", "nathan123");
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Welcome</Text>
@@ -74,6 +83,9 @@ export default function SignInScreen() {
       </View>
       <View style={styles.buttonContainer}>
         <Button title="Sign In" onPress={handleSignIn} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <Button title="Skip (Dev Only)" onPress={handleSkip} />
       </View>
     </View>
   );

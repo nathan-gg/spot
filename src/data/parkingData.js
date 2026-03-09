@@ -6,7 +6,7 @@ async function getVancouverOpenData(lat, lng) {
     const data = await response.json();
 
     return data.results.map((parkingSpot) => ({
-      id: parkingSpot.meterid,
+      id: parkingSpot.meter_id,
       type: "street_parking_meter",
       latitude: parkingSpot.geo_point_2d.lat,
       longitude: parkingSpot.geo_point_2d.lon,
