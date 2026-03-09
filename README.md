@@ -17,6 +17,8 @@ Citations & Learning Resources (Organized By Source):
 - IAT 359 Canvas Modules
   - Lecture 4 https://canvas.sfu.ca/courses/9235/files/1764791?module_item_id=559911
 
+  - Lecture 5 https://canvas.sfu.ca/courses/9235/files/1826544?module_item_id=567867
+
   - Lecture 6 https://canvas.sfu.ca/courses/9235/files/1918532?module_item_id=577515
   - demo_firebase_auth https://canvas.sfu.ca/courses/9235/pages/code-demo-firebase-auth?module_item_id=579087
   - MyPlantsApp.zip https://canvas.sfu.ca/courses/9235/files/1924963?module_item_id=579506

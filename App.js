@@ -131,7 +131,8 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignIn">
+      {/* <Stack.Navigator initialRouteName="SignIn"></Stack.Navigator> */}
+      <Stack.Navigator>
         {user ? (
           // IF LOGGED IN: render the Protected Layout.
           // we hide the header here because the ProtectedLayout has its own headers.

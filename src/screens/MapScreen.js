@@ -10,7 +10,7 @@ import styles from "../styles";
 
 export default function App() {
   const apiKey = process.env.EXPO_PUBLIC_API_KEY;
-  console.log(apiKey);
+  // console.log("This is the apikey", apiKey);
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
