@@ -10,8 +10,8 @@ async function getVancouverOpenData(lat, lng) {
       type: "street_parking_meter",
       latitude: parkingSpot.geo_point_2d.lat,
       longitude: parkingSpot.geo_point_2d.lon,
-      rate: parkingSpot.r_mf_9a_6p, // weekday rate 9am-6pm
-      timeLimit: parkingSpot.t_mf_9a_6p, // weekday time limit 9am-6pm
+      rate: parkingSpot.rate_9am_6pm,
+      timeLimit: parkingSpot.time_limit_9am_6pm, // weekday time limit 9am-6pm
     }));
   } catch (error) {
     console.warn("Error fetching street meters: ", error);

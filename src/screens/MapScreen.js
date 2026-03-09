@@ -85,9 +85,9 @@ export default function App() {
     })();
   }, []);
 
-  // function handleMarkerPress(spot) {
-  //   console.log("Marker pressed: ", spot);
-  // }
+  function handleMarkerPress(parkingSpot) {
+    console.log("Marker pressed: ", parkingSpot);
+  }
 
   return (
     <View style={styles.container}>
@@ -132,7 +132,11 @@ export default function App() {
             title={parkingSpot.type}
             description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
             onPress={() => handleMarkerPress(parkingSpot)}
-          />
+          >
+            <View style={styles.mapMarker}>
+              <Text>{`${parkingSpot.rate}/hr`}</Text>
+            </View>
+          </Marker>
         ))}
       </MapView>
     </View>

@@ -139,6 +139,8 @@ function MainTabs() {
   );
 }
 
+
+
 export default function App() {
   const [user, setUser] = useState(null);
   const ProtectedStack = createNativeStackNavigator();
