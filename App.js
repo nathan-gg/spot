@@ -9,20 +9,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { firebase_auth } from "./src/firebaseConfig";
-import ProtectedAreaScreen from "./src/screens/ProtectedAreaScreen";
 import SignInScreen from "./src/screens/SignInScreen";
 import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
-
-//import Onboarding Screens ** FILE NAMES TO BE CHANGED
-import LoginScreen from "./src/screens/LoginScreen";
-import PasswordScreen from "./src/screens/PasswordScreen";
-import LocationPermScreen from "./src/screens/LocationPermScreen";
-
-// import Tab Screens ** FILE NAMES TO BE CHANGED
-import Tab1Screen from "./src/screens/Tab1Screen";
-import Tab2Screen from "./src/screens/Tab2Screen";
-import Tab3Screen from "./src/screens/Tab3Screen";
-import Tab4Screen from "./src/screens/Tab4Screen";
 
 // import Settings Screen ** FILE NAMES TO BE CHANGED
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -35,44 +23,6 @@ import HomeScreen from "./src/screens/HomeScreen.js";
 //navigators
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-//Functions (Each Tab has its own stack within!) ** DUE TO CHANGE
-// ATM The SettingsScreen can be accessed from each tab just as place holders
-function Tab1Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 1" component={Tab1Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab2Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 2" component={Tab2Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab3Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 3" component={Tab3Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab4Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 4" component={Tab4Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
 
 //Main Navigation Bar at Bottom, holding all Tabs
 function MainTabs() {
