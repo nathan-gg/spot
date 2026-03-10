@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
   },
 
   spotName: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "600",
     color: "black",
     flex: 1,

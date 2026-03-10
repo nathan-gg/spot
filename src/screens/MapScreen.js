@@ -368,11 +368,11 @@ export default function App() {
           </View>
           {/* address/description data comming soon */}
           <Text style={styles.spotAddress}>
-            {selectedParkingSpot?.address}67 Chud st.
+            {selectedParkingSpot?.address}123 Address St.
           </Text>
 
           <Text style={styles.spotDescription}>
-            {selectedParkingSpot?.description}the best of the best
+            {selectedParkingSpot?.description}Vancouver, BC
           </Text>
 
           <Ionicons name="bookmark-outline" size={22} color="#6C63FF" />
