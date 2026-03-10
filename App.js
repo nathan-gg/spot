@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
 
 //firebase user authentication imports
 import { onAuthStateChanged } from "firebase/auth";
@@ -84,18 +85,30 @@ function MainTabs() {
 
         // placeholder boxes, replace with icons later
         tabBarIcon: ({ focused }) => {
+          const icons = {
+            Map: "map-outline",
+            Saved: "bookmark-outline",
+            Settings: "person-outline",
+          };
+          const iconName = icons[route.name] ?? "ellipse-outline";
           return (
             <View
               style={{
-                width: 36,
-                height: 36,
-                borderRadius: 6,
+                width: 45,
+                height: 45,
+                borderRadius: 10,
                 marginTop: 20,
-                backgroundColor: focused
-                  ? "rgba(255,255,255,0.9)" // ** active box color
-                  : "rgba(255,255,255,0.25)", // ** inactive box color
+                backgroundColor: focused ? "#FFFFFF" : "rgba(255,255,255,0.12)",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
+            >
+              <Ionicons
+                name={iconName}
+                size={30}
+                color={focused ? "#6a65fb" : "rgba(255, 255, 255, 0.55)"}
+              />
+            </View>
           );
         },
 
@@ -139,8 +152,6 @@ function MainTabs() {
     </Tab.Navigator>
   );
 }
-
-
 
 export default function App() {
   const [user, setUser] = useState(null);
