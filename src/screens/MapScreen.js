@@ -23,6 +23,9 @@ import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles";
 import MapPreferenceScreen from "./MapPreferenceScreen";
 
+import { collection, addDoc } from "firebase/firestore";
+import { db, firebase_auth } from "../firebaseConfig";
+
 // tuff
 
 export default function App() {
@@ -106,6 +109,31 @@ export default function App() {
   function handleMarkerPress(spot) {
     console.log("Marker pressed: ", spot);
     setSelectedParkingSpot(spot);
+  }
+
+  // function to insert new plant into Firestore
+  // when looking for info from Firestore, it may take time to get over google, so Firestore sends a "promise" while the answer loads
+  // using an async function with await makes it so the function is able to pause until the answer is retrieved, rather than breaking
+  async function saveParkingSpot(parkingSpot) {
+    try {
+      // add a new "document" (plant) to the plants Firestore collection (database) based on whats currently in the form when "Add Plant is clicked", then Firestore auto generates an id
+      const docRef = await addDoc(collection(db, "savedParkingSpots"), {
+        userId: firebase_auth.currentUser.uid,
+        id: parkingSpot.id,
+        type: parkingSpot.type,
+        latitude: parkingSpot.latitude,
+        longitude: parkingSpot.longitude,
+        rate: parkingSpot.rate,
+        timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+        dateSaved: new Date(),
+      });
+      // should log the id and clear form, but clearing not working?, then shows a native success popup
+      console.log("Document written with ID: ", docRef.id);
+      Alert.alert(`Spot Saved!`);
+    } catch (e) {
+      //catch any errors like: no connection to db, no write permissions to db, invalid data, etc
+      console.error("Error adding document: ", e);
+    }
   }
 
   async function openMapApplication(latitude, longitude) {
@@ -219,6 +247,22 @@ export default function App() {
           {/* Go Here → opens Google Maps or Apple Maps */}
           <Pressable
             style={styles.parkButton}
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "white",
+            padding: 20,
+            paddingBottom: 100,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          }}
+        >
+          <Text>{selectedParkingSpot?.rate}/hr</Text>
+          <Button
+            title="Go Here"
             onPress={() =>
               openMapApplication(
                 selectedParkingSpot?.latitude,
@@ -235,6 +279,12 @@ export default function App() {
           >
             <Text style={styles.closeButtonText}>Close</Text>
           </Pressable>
+          />
+          <Button
+            title="Save Spot"
+            onPress={() => saveParkingSpot(selectedParkingSpot)}
+          />
+          
         </View>
       )}
     </View>
