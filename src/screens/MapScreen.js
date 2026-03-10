@@ -401,6 +401,11 @@ export default function App() {
           >
             <Text style={styles.parkButtonText}>Go Here</Text>
           </Pressable>
+          <Button
+            title="Save Spot"
+            onPress={() => saveParkingSpot(selectedParkingSpot)}
+          />
+
           {/* Close */}
           <Pressable
             style={styles.closeButton}
