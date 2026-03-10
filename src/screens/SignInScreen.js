@@ -3,108 +3,148 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { firebase_auth } from "../firebaseConfig";
+import { signInStyles as styles } from "../styles";
+
 export default function SignInScreen() {
-  // state variables to track email and password inputs.
-  // these make the text inputs "Controlled Components" (React manages their values).
+  const [step, setStep] = useState("email"); // "email" | "password" | "signin"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // get the auth instance initialized in firebaseConfig.js
   const auth = firebase_auth;
-  // handles User Registration.
-  // this creates a new user in Firebase Console -> Authentication tab.
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   async function handleSignUp() {
     try {
-      // send request to Firebase to create a user.
-      // 'await' pauses execution here until Firebase responds.
-      const response = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-      console.log(response);
-      alert("Sign up success. User: " + email + " signed up.");
-      // note: After successful signup, Firebase automatically signs the user in.
-      // the onAuthStateChanged listener in App.js will detect this and navigate.
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      // handle errors (e.g., email already in use, weak password).
-      console.log(error.message);
       alert(error.message);
     }
   }
-  // handles User Login.
-  // this checks credentials against existing users in Firebase
+
   async function handleSignIn() {
     try {
-      // send request to Firebase to validate credentials.
-      const response = await signInWithEmailAndPassword(auth, email, password);
-      //console.log(response);
-      alert("User: " + email + " signed in");
-      // note: Similar to sign up, a success here triggers App.js to switch screens automatically.
+      await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
-      // handle errors (e.g., wrong password, user not found).
-      console.log(error.message);
       alert(error.message);
     }
   }
+
+  // --- Email Step ---
+  if (step === "email") {
+    return (
+      <View style={styles.container}>
+        <View style={styles.progressRow}>
+          <View style={[styles.progressDot, styles.progressDotActive]} />
+          <View style={styles.progressDot} />
+        </View>
+        <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+        <Text style={styles.tagline}>The smarter way to park.</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Enter your email..."
+          placeholderTextColor="#aaa"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <TouchableOpacity
+          style={[styles.continueButton, { opacity: isValidEmail ? 1 : 0.4 }]}
+          onPress={() => isValidEmail && setStep("password")}
+        >
+          <Text style={styles.continueButtonText}>Continue</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => setStep("signin")}>
+          <Text style={styles.signInLink}>Already have an account? Sign In</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // --- Sign In Step ---
+  if (step === "signin") {
+    const canSignIn = isValidEmail && password.length > 0;
+    return (
+      <View style={styles.container}>
+        <View style={styles.progressRow}>
+          <View style={[styles.progressDot, styles.progressDotActive]} />
+          <View style={styles.progressDot} />
+        </View>
+
+        <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+        <Text style={styles.tagline}>The smarter way to park.</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#aaa"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          placeholderTextColor="#aaa"
+          secureTextEntry={true}
+          value={password}
+          onChangeText={setPassword}
+        />
+
+        <TouchableOpacity>
+          <Text style={styles.forgotText}>Forgot Password?</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.signUpButton, { opacity: canSignIn ? 1 : 0.4 }]}
+          onPress={() => canSignIn && handleSignIn()}
+        >
+          <Text style={styles.signUpButtonText}>Sign In</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.goBackButton} onPress={() => { setPassword(""); setStep("email"); }}>
+          <Text style={styles.goBackButtonText}>← Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // --- Password Step (Sign Up) ---
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Welcome</Text>
-      {/* Email Input */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address" // optimizes keyboard for email entry (@symbol)
-        value={email}
-        onChangeText={setEmail} // updates state on every keystroke
-        autoCapitalize="none" // important! Prevents auto-capitalizing the first letter of emails
-      />
-      {/* Password Input */}
+    <LinearGradient
+      colors={["#FFFFFF", "rgba(94, 88, 255, 0.15)"]}
+      style={styles.container}
+    >
+      <View style={styles.progressRow}>
+        <View style={[styles.progressDot, styles.progressDotActive]} />
+        <View style={[styles.progressDot, styles.progressDotActive]} />
+      </View>
+
+      <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+      <Text style={styles.tagline}>The smarter way to park.</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Password"
-        secureTextEntry={true} // hides text for security (dots/asterisks)
+        placeholderTextColor="#aaa"
+        secureTextEntry={true}
         value={password}
         onChangeText={setPassword}
       />
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <Button title="Sign Up" onPress={handleSignUp} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button title="Sign In" onPress={handleSignIn} />
-      </View>
-    </View>
+
+      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+        <Text style={styles.signUpButtonText}>Sign Up</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.goBackButton} onPress={() => setStep("email")}>
+        <Text style={styles.goBackButtonText}>← Go Back</Text>
+      </TouchableOpacity>
+    </LinearGradient>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 16,
-    backgroundColor: "#f2f2f2",
-  },
-  header: {
-    fontSize: 24,
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 8,
-    borderRadius: 4,
-    backgroundColor: "white",
-  },
-  buttonContainer: {
-    padding: 20,
-  },
-  footer: {
-    marginTop: 20,
-    textAlign: "center",
-    color: "#888",
-  },
-});

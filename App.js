@@ -131,7 +131,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="SignIn">
+      <Stack.Navigator>
         {user ? (
           // IF LOGGED IN: render the Protected Layout.
           // we hide the header here because the ProtectedLayout has its own headers.
@@ -142,10 +142,9 @@ export default function App() {
           />
         ) : (
           // IF NOT LOGGED IN: render the Sign In Screen.
-          // * <Stack.Screen name="SignIn" component={SignInScreen} />
           <Stack.Screen
-            name="ProtectedArea"
-            component={ProtectedLayout}
+            name="SignIn"
+            component={SignInScreen}
             options={{ headerShown: false }}
           />
         )}
