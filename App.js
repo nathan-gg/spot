@@ -140,8 +140,6 @@ function MainTabs() {
   );
 }
 
-
-
 export default function App() {
   const [user, setUser] = useState(null);
   const [mapPreference, setMapPreference] = useState(null);
@@ -162,6 +160,7 @@ export default function App() {
           <ProtectedStack.Screen
             name="MapPreference"
             component={MapPreferenceScreen}
+            options={{ headerShown: false }}
           />
         )}
         <ProtectedStack.Screen
@@ -199,7 +198,11 @@ export default function App() {
           />
         ) : (
           // IF NOT LOGGED IN: render the Sign In Screen.
-          <Stack.Screen name="SignIn" component={SignInScreen} />
+          <Stack.Screen
+            name="SignIn"
+            component={SignInScreen}
+            options={{ headerShown: false }}
+          />
           // <Stack.Screen
           //   name="ProtectedArea"
           //   component={ProtectedLayout}
