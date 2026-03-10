@@ -1,18 +1,19 @@
 import { StyleSheet } from "react-native";
 
-// Design Style Library
-const PURPLE = "#8581FF";
-const DARK_PURPLE = "#554fff";
-const GRAY_BG = "#E8E8E8";
-const GRAY_TEXT = "#7d7d7d";
+// Design Style Library - assign hex codes to a variable for easy styling
+const PURPLE = "#807cff"; //main purple
+const DARK_PURPLE = "#554fff"; //darker purple
+const GRAY_BG = "#E8E8E8"; //app backgrouns colour
+const GRAY_TEXT = "#7d7d7d"; // secondary text: descriptions
 const WHITE = "#FFFFFF";
-const GREEN = "#31ab31";
+const GREEN = "#31ab31"; //price label colout
 
 const styles = StyleSheet.create({
+  //container for Map Screen
   container: {
-    flex: 1,
+    flex: 1, // For it to fill the screen
     backgroundColor: GRAY_BG,
-    padding: 0,
+    padding: 0, // For Map to fill in the edges
   },
   title: {
     marginTop: 10,
@@ -21,18 +22,20 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   map: {
-    width: "100%",
+    width: "100%", //Map fill the screen from edge to edge
     flex: 1,
   },
 
+  //Search Bar - on MapScreen
   searchWrapper: {
     position: "absolute",
-    top: 70,
+    top: 70, // padding so the bar is not in the dynamic island
     left: 20,
     right: 20,
-    zIndex: 1,
+    zIndex: 1, //Allows the search pill bar to be layered above the map
   },
 
+  // white pill container holds the search input and icon
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -44,17 +47,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
-    elevation: 4,
   },
 
   input: {
+    //text inside the search bar
     flex: 1,
     fontSize: 15,
     color: "black",
     fontWeight: "400",
-    paddingLeft: 6,
+    paddingLeft: 6, // allows room search icon
   },
-  // Map Markers
+  // Map Markers - White pill with DARK_PURPLE border
   mapMarker: {
     backgroundColor: WHITE,
     paddingHorizontal: 10,
@@ -71,11 +74,11 @@ const styles = StyleSheet.create({
   //text inside the marker
   mapMarkerText: {
     color: DARK_PURPLE,
-    fontWeight: "700",
+    fontWeight: "700", //bold or even heavy
     fontSize: 14,
   },
 
-  //Bottom Sheet (pops up when you tap a parking spot
+  //Bottom Sheet pops/slides up when you tap a parking spot
   bottomSheet: {
     position: "absolute",
     bottom: 0,
@@ -86,12 +89,11 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingHorizontal: 18,
     paddingTop: 12,
-    paddingBottom: 100,
+    paddingBottom: 100, //not behind nav bar
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 10,
   },
 
   //little grey handle at the top of the sheet
@@ -132,6 +134,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 2,
   },
+
   spotAddress: {
     fontSize: 13,
     color: GRAY_TEXT,
@@ -151,21 +154,23 @@ const styles = StyleSheet.create({
   },
 
   starFilled: {
+    //filled stars are purple
     color: PURPLE,
     fontSize: 20,
     marginRight: 2,
   },
 
   starEmpty: {
+    //empty stars are faded
     color: "#D0CFFF",
     fontSize: 20,
     marginRight: 2,
   },
 
-  // ── Buttons ──────────────────────────────────────────────────────────────
+  //CTA  Buttons
 
-  //
   parkButton: {
+    //Go here
     backgroundColor: PURPLE,
     borderRadius: 12,
     paddingVertical: 12,
@@ -185,6 +190,8 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
+  //Save Spot button yet to be styled
+
   closeButton: {
     marginTop: 10,
     alignItems: "center",
@@ -196,20 +203,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-
-  // ── Legacy — kept so unrelated screens don't break
-  // title: {
-  //   marginTop: 10,
-  //   padding: 5,
-  //   fontWeight: "bold",
-  //   fontSize: 20,
-  // },
-  // buttonView: {
-  //   margin: 10,
-  // },
 });
 
+//Sign In Screen
 export const signInStyles = StyleSheet.create({
+  // full screen white container
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -217,17 +215,23 @@ export const signInStyles = StyleSheet.create({
     paddingTop: 80,
     alignItems: "stretch",
   },
+
+  //logo image at the top - above fields
   logo: {
     width: 120,
     height: 60,
     resizeMode: "contain",
     marginBottom: 6,
   },
+
+  //subtitle text below logo image
   tagline: {
     fontSize: 16,
     color: "#333",
     marginBottom: 28,
   },
+
+  //email and password inputs
   input: {
     backgroundColor: "white",
     borderWidth: 1,
@@ -238,37 +242,48 @@ export const signInStyles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 14,
   },
+
   continueButton: {
-    backgroundColor: "#807CFF",
+    backgroundColor: PURPLE,
     borderRadius: 10,
     paddingVertical: 14,
     alignItems: "center",
     marginBottom: 20,
   },
+
   continueButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
+
+  //the lines indicating the onboarding status
   progressRow: {
     flexDirection: "row",
     gap: 6,
     marginBottom: 40,
   },
+
+  //inactive progress status
   progressDot: {
     flex: 1,
     height: 5,
     borderRadius: 3,
     backgroundColor: "#ddd",
   },
+
+  //when during that step
   progressDotActive: {
     backgroundColor: PURPLE,
   },
+
+  //Forgot Password?
   forgotText: {
     color: PURPLE,
     fontSize: 14,
     marginBottom: 20,
   },
+
   signUpButton: {
     backgroundColor: PURPLE,
     borderRadius: 10,
@@ -276,11 +291,13 @@ export const signInStyles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
+
   signUpButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
+
   goBackButton: {
     backgroundColor: "white",
     borderRadius: 10,
@@ -290,11 +307,14 @@ export const signInStyles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
+
   goBackButtonText: {
     color: "#333",
     fontSize: 15,
     fontWeight: "500",
   },
+
+  //Already have an account?
   signInLink: {
     textAlign: "center",
     color: PURPLE,
