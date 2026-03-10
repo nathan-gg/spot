@@ -13,17 +13,6 @@ import ProtectedAreaScreen from "./src/screens/ProtectedAreaScreen";
 import SignInScreen from "./src/screens/SignInScreen";
 import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
 
-//import Onboarding Screens ** FILE NAMES TO BE CHANGED
-import LoginScreen from "./src/screens/LoginScreen";
-import PasswordScreen from "./src/screens/PasswordScreen";
-import LocationPermScreen from "./src/screens/LocationPermScreen";
-
-// import Tab Screens ** FILE NAMES TO BE CHANGED
-import Tab1Screen from "./src/screens/Tab1Screen";
-import Tab2Screen from "./src/screens/Tab2Screen";
-import Tab3Screen from "./src/screens/Tab3Screen";
-import Tab4Screen from "./src/screens/Tab4Screen";
-
 // import Settings Screen ** FILE NAMES TO BE CHANGED
 import SettingsScreen from "./src/screens/SettingsScreen";
 
@@ -236,26 +225,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-
-{
-  /* <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Password"
-          component={PasswordScreen}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="LocationPerm"
-          component={LocationPermScreen}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{ headerShown: false, gestureEnabled: false }}
-        /> */
-}

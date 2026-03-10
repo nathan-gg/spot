@@ -135,25 +135,42 @@ export default function App() {
     }
   }
 
+  // this is for determining which app should be open based on the user preferences stored in AsyncStorage
   async function openMapApplication(latitude, longitude) {
+    // check the device storage and use getItem() to get the mapPreference value of either google-maps-preference or apple-maps-preference
     const preference = await AsyncStorage.getItem("mapPreference");
-
+    // user prefers google maps
     if (preference === "google-maps-preference") {
+      // set url to google maps external link format
       const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
-
+      // create canOpenURL as a boolean the checks if the user has the destination app (ex. Google Maps) downloaded
       const canOpenURL = await Linking.canOpenURL(url);
-
+      // if Google Maps is downloaded, open in the app
       if (canOpenURL) {
         Linking.openURL(url);
       } else {
-        // if google maps not installed, open in browser
+        // otherwise open on the website
         Linking.openURL(
           `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
         );
       }
+    } else if (preference === "apple-maps-preference") {
+      // repeat the process, but if the user has Apple Maps as their preference
+      const url = `maps://?daddr=${latitude},${longitude}`;
+      const canOpenURL = await Linking.canOpenURL(url);
+      if (canOpenURL) {
+        Linking.openURL(url);
+      } else {
+        // fallback if Apple Maps not available (e.g. Android)
+        Linking.openURL(
+          `https://maps.apple.com/?daddr=${latitude},${longitude}`,
+        );
+      }
     } else {
-      // apply all else to apple maps for now
-      Linking.openURL(`maps://?daddr=${latitude},${longitude}`);
+      // if somehow neither Google Maps nor Apple Maps are selected just open a regular google link
+      Linking.openURL(
+        `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
+      );
     }
   }
 
@@ -217,7 +234,7 @@ export default function App() {
           <View style={styles.bottomSheetHandle} />
           {/* Name + Price row */}
           <View style={styles.bottomSheetHeader}>
-            <Text style={styles.spotName}>{selectedParkingSpot?.type}</Text>
+            <Text style={styles.spotName}>{selectedParkingSpot?.id}</Text>
             <Text style={styles.spotPrice}>{selectedParkingSpot?.rate}/hr</Text>
           </View>
           {/* address/description data comming soon */}
