@@ -21,6 +21,9 @@ import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 import styles from "../styles";
 import MapPreferenceScreen from "./MapPreferenceScreen";
 
+import { collection, addDoc } from "firebase/firestore";
+import { db, firebase_auth } from "../firebaseConfig";
+
 // tuff
 
 export default function App() {
@@ -106,6 +109,31 @@ export default function App() {
     setSelectedParkingSpot(spot);
   }
 
+  // function to insert new plant into Firestore
+  // when looking for info from Firestore, it may take time to get over google, so Firestore sends a "promise" while the answer loads
+  // using an async function with await makes it so the function is able to pause until the answer is retrieved, rather than breaking
+  async function saveParkingSpot(parkingSpot) {
+    try {
+      // add a new "document" (plant) to the plants Firestore collection (database) based on whats currently in the form when "Add Plant is clicked", then Firestore auto generates an id
+      const docRef = await addDoc(collection(db, "savedParkingSpots"), {
+        userId: firebase_auth.currentUser.uid,
+        id: parkingSpot.id,
+        type: parkingSpot.type,
+        latitude: parkingSpot.latitude,
+        longitude: parkingSpot.longitude,
+        rate: parkingSpot.rate,
+        timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+        dateSaved: new Date(),
+      });
+      // should log the id and clear form, but clearing not working?, then shows a native success popup
+      console.log("Document written with ID: ", docRef.id);
+      Alert.alert(`Spot Saved!`);
+    } catch (e) {
+      //catch any errors like: no connection to db, no write permissions to db, invalid data, etc
+      console.error("Error adding document: ", e);
+    }
+  }
+
   async function openMapApplication(latitude, longitude) {
     const preference = await AsyncStorage.getItem("mapPreference");
 
@@ -189,7 +217,6 @@ export default function App() {
             paddingBottom: 100,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            
           }}
         >
           <Text>{selectedParkingSpot?.rate}/hr</Text>
@@ -201,6 +228,10 @@ export default function App() {
                 selectedParkingSpot?.longitude,
               )
             }
+          />
+          <Button
+            title="Save Spot"
+            onPress={() => saveParkingSpot(selectedParkingSpot)}
           />
           <Button title="Close" onPress={() => setSelectedParkingSpot(null)} />
         </View>
