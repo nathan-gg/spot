@@ -1,13 +1,25 @@
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Button,
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Marker } from "react-native-maps";
 import { getParkingData } from "../data/parkingData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 
 import styles from "../styles";
+import MapPreferenceScreen from "./MapPreferenceScreen";
 
 // tuff
 
@@ -86,8 +98,34 @@ export default function App() {
     })();
   }, []);
 
+  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  // const [modalVisible, setModalVisible] = useState(false);
+
   function handleMarkerPress(spot) {
     console.log("Marker pressed: ", spot);
+    setSelectedParkingSpot(spot);
+  }
+
+  async function openMapApplication(latitude, longitude) {
+    const preference = await AsyncStorage.getItem("mapPreference");
+
+    if (preference === "google-maps-preference") {
+      const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
+
+      const canOpenURL = await Linking.canOpenURL(url);
+
+      if (canOpenURL) {
+        Linking.openURL(url);
+      } else {
+        // if google maps not installed, open in browser
+        Linking.openURL(
+          `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
+        );
+      }
+    } else {
+      // apply all else to apple maps for now
+      Linking.openURL(`maps://?daddr=${latitude},${longitude}`);
+    }
   }
 
   return (
@@ -112,15 +150,13 @@ export default function App() {
         style={styles.map}
         ref={mapRef}
         initialRegion={{
-          // default starting view (YVR)
           latitude: 49.19418,
           longitude: -123.17505,
-          latitudeDelta: 0.0922, //zoom
-          longitudeDelta: 0.0421, //zoom
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
         }}
-        showsMyLocationButton // enable the "Current Location" button
-        showsUserLocation // show the blue dot for user's position
-        // use Google Maps on Android on both Android and iOS
+        showsMyLocationButton
+        showsUserLocation
         provider={PROVIDER_GOOGLE}
       >
         {parkingSpots.map((parkingSpot) => (
@@ -140,6 +176,35 @@ export default function App() {
           </Marker>
         ))}
       </MapView>
+
+      {selectedParkingSpot && (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "white",
+            padding: 20,
+            paddingBottom: 100,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            
+          }}
+        >
+          <Text>{selectedParkingSpot?.rate}/hr</Text>
+          <Button
+            title="Go Here"
+            onPress={() =>
+              openMapApplication(
+                selectedParkingSpot?.latitude,
+                selectedParkingSpot?.longitude,
+              )
+            }
+          />
+          <Button title="Close" onPress={() => setSelectedParkingSpot(null)} />
+        </View>
+      )}
     </View>
   );
 }

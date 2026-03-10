@@ -32,9 +32,13 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 
 - React Native Documentation
   - FlatList https://reactnative.dev/docs/flatlist
+  - Modal https://reactnative.dev/docs/modal
+  - Linking https://reactnative.dev/docs/next/linking
 
 - External Research
-  - How to Present a React Native Bottom Sheet https://www.youtube.com/watch?v=oIEykI5oagI
   - Customize your Auth Dependencies https://firebase.google.com/docs/auth/web/custom-dependencies
   - react-native-maps https://www.npmjs.com/package/react-native-maps
   - Expo Documentation for react-native-maps https://docs.expo.dev/versions/latest/sdk/map-view/
+  - Google Maps URL Scheme for iOS https://developers.google.com/maps/documentation/urls/ios-urlscheme
+  - Apple URL Scheme Reference: Map Links https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+
