@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { firebase_auth } from "./src/firebaseConfig";
 import ProtectedAreaScreen from "./src/screens/ProtectedAreaScreen";
 import SignInScreen from "./src/screens/SignInScreen";
+import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
 
 //import Onboarding Screens ** FILE NAMES TO BE CHANGED
 import LoginScreen from "./src/screens/LoginScreen";
@@ -75,12 +76,51 @@ function Tab4Stack() {
 //Main Navigation Bar at Bottom, holding all Tabs
 function MainTabs() {
   return (
-    <Tab.Navigator>
-      <Tab.Screen
+    <Tab.Navigator /* Options and Effects wrote in here - as it applies to all Tabs */
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        animation: "fade" /* fade between tab navigation */,
+        tabBarShowLabel: false /* no labels in nav bar */,
+
+        // placeholder boxes, replace with icons later
+        tabBarIcon: ({ focused }) => {
+          return (
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 6,
+                marginTop: 20,
+                backgroundColor: focused
+                  ? "rgba(255,255,255,0.9)" // ** active box color
+                  : "rgba(255,255,255,0.25)", // ** inactive box color
+              }}
+            />
+          );
+        },
+
+        // transparent bar
+        tabBarStyle: {
+          position: "absolute", // floats over screen content
+          bottom: 30 /* bottom gap */,
+          marginRight: 25,
+          marginLeft: 25,
+          borderRadius: 60,
+          height: 60,
+          backgroundColor: "rgba(0, 0, 0, 0.45)", // color & transparency
+          shadowColor: "#000000",
+          shadowOffset: { width: 1, height: 1 },
+          shadowOpacity: 0.2,
+          shadowRadius: 12,
+        },
+      })}
+    >
+      {/* Tab names are 1 2 3 4 — rename when screens are finalized */}
+      {/* <Tab.Screen
         name="Home"
         component={HomeScreen}
         options={{ headerShown: false }}
-      />
+      /> */}
       <Tab.Screen
         name="Map"
         component={MapScreen}
@@ -100,19 +140,35 @@ function MainTabs() {
   );
 }
 
+
+
 export default function App() {
   const [user, setUser] = useState(null);
+  const [mapPreference, setMapPreference] = useState(null);
   const ProtectedStack = createNativeStackNavigator();
+
+  useEffect(() => {
+    async function checkMapPreference() {
+      const preference = await AsyncStorage.getItem("mapPreference");
+      setMapPreference(preference);
+    }
+    checkMapPreference();
+  }, []);
 
   function ProtectedLayout() {
     return (
       <ProtectedStack.Navigator>
+        {!mapPreference && (
+          <ProtectedStack.Screen
+            name="MapPreference"
+            component={MapPreferenceScreen}
+          />
+        )}
         <ProtectedStack.Screen
           name="MainTabs"
           component={MainTabs}
           options={{ headerShown: false, gestureEnabled: false }}
         />
-        {/* you can add more private screens here (e.g., Profile, Settings) */}
       </ProtectedStack.Navigator>
     );
   }
@@ -131,6 +187,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
+      {/* <Stack.Navigator initialRouteName="SignIn"></Stack.Navigator> */}
       <Stack.Navigator>
         {user ? (
           // IF LOGGED IN: render the Protected Layout.
@@ -142,11 +199,13 @@ export default function App() {
           />
         ) : (
           // IF NOT LOGGED IN: render the Sign In Screen.
-          <Stack.Screen
-            name="SignIn"
-            component={SignInScreen}
-            options={{ headerShown: false }}
-          />
+          <Stack.Screen name="SignIn" component={SignInScreen} />
+          // <Stack.Screen
+          //   name="ProtectedArea"
+          //   component={ProtectedLayout}
+          //   options={{ headerShown: false }}
+          // />
+          // <Stack.Screen name="MapPreference" component={MapPreferenceScreen} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

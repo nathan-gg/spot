@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const PURPLE = "#5C5CE0";
 
@@ -32,6 +32,7 @@ const styles = StyleSheet.create({
   buttonView: {
     margin: 10,
   },
+  mapMarker: {},
 });
 
 export const signInStyles = StyleSheet.create({

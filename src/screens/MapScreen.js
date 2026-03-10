@@ -1,20 +1,39 @@
 import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Button,
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { Marker } from "react-native-maps";
+import { getParkingData } from "../data/parkingData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 
 import styles from "../styles";
+import MapPreferenceScreen from "./MapPreferenceScreen";
+
+import { collection, addDoc } from "firebase/firestore";
+import { db, firebase_auth } from "../firebaseConfig";
 
 // tuff
 
 export default function App() {
   const apiKey = process.env.EXPO_PUBLIC_API_KEY;
-  console.log(apiKey);
+  // console.log("This is the apikey", apiKey);
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
+  const [parkingSpots, setParkingSpots] = useState([]); //
 
   // initialize Geocoder with Google Maps API Key
   Geocoder.init(apiKey);
@@ -29,10 +48,17 @@ export default function App() {
       // fetch geocoding data from Google
       const json = await Geocoder.from(searchLocation);
       const location = json.results[0].geometry.location;
+      const lat = location.lat;
+      const lng = location.lng;
+
+      // get data from parkingData.js to put markers on the map for parking spots
+      const spots = await getParkingData(lat, lng);
+      setParkingSpots(spots);
 
       const searchedLocation = {
         latitude: location.lat,
         longitude: location.lng,
+
         // Delta values determine the "zoom" spread of the view
         latitudeDelta: 0.1,
         longitudeDelta: 0.1,
@@ -67,13 +93,68 @@ export default function App() {
       if (location) {
         setCurrentLocation(location);
         console.log(
-          `Current location: lat: ${currentLocationlocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
+          `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         );
       } else {
         console.log("Current location not obtained");
       }
     })();
   }, []);
+
+  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  // const [modalVisible, setModalVisible] = useState(false);
+
+  function handleMarkerPress(spot) {
+    console.log("Marker pressed: ", spot);
+    setSelectedParkingSpot(spot);
+  }
+
+  // function to insert new plant into Firestore
+  // when looking for info from Firestore, it may take time to get over google, so Firestore sends a "promise" while the answer loads
+  // using an async function with await makes it so the function is able to pause until the answer is retrieved, rather than breaking
+  async function saveParkingSpot(parkingSpot) {
+    try {
+      // add a new "document" (plant) to the plants Firestore collection (database) based on whats currently in the form when "Add Plant is clicked", then Firestore auto generates an id
+      const docRef = await addDoc(collection(db, "savedParkingSpots"), {
+        userId: firebase_auth.currentUser.uid,
+        id: parkingSpot.id,
+        type: parkingSpot.type,
+        latitude: parkingSpot.latitude,
+        longitude: parkingSpot.longitude,
+        rate: parkingSpot.rate,
+        timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+        dateSaved: new Date(),
+      });
+      // should log the id and clear form, but clearing not working?, then shows a native success popup
+      console.log("Document written with ID: ", docRef.id);
+      Alert.alert(`Spot Saved!`);
+    } catch (e) {
+      //catch any errors like: no connection to db, no write permissions to db, invalid data, etc
+      console.error("Error adding document: ", e);
+    }
+  }
+
+  async function openMapApplication(latitude, longitude) {
+    const preference = await AsyncStorage.getItem("mapPreference");
+
+    if (preference === "google-maps-preference") {
+      const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
+
+      const canOpenURL = await Linking.canOpenURL(url);
+
+      if (canOpenURL) {
+        Linking.openURL(url);
+      } else {
+        // if google maps not installed, open in browser
+        Linking.openURL(
+          `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
+        );
+      }
+    } else {
+      // apply all else to apple maps for now
+      Linking.openURL(`maps://?daddr=${latitude},${longitude}`);
+    }
+  }
 
   return (
     <View style={styles.container}>
@@ -97,17 +178,64 @@ export default function App() {
         style={styles.map}
         ref={mapRef}
         initialRegion={{
-          // default starting view (YVR)
           latitude: 49.19418,
           longitude: -123.17505,
-          latitudeDelta: 0.0922, //zoom
-          longitudeDelta: 0.0421, //zoom
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
         }}
-        showsMyLocationButton // enable the "Current Location" button
-        showsUserLocation // show the blue dot for user's position
-        // use Google Maps on Android on both Android and iOS
+        showsMyLocationButton
+        showsUserLocation
         provider={PROVIDER_GOOGLE}
-      />
+      >
+        {parkingSpots.map((parkingSpot) => (
+          <Marker
+            key={parkingSpot.id}
+            coordinate={{
+              latitude: parkingSpot.latitude,
+              longitude: parkingSpot.longitude,
+            }}
+            title={parkingSpot.type}
+            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            onPress={() => handleMarkerPress(parkingSpot)}
+          >
+            <View style={styles.mapMarker}>
+              <Text>{`${parkingSpot.rate}/hr`}</Text>
+            </View>
+          </Marker>
+        ))}
+      </MapView>
+
+      {selectedParkingSpot && (
+        <View
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "white",
+            padding: 20,
+            paddingBottom: 100,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          }}
+        >
+          <Text>{selectedParkingSpot?.rate}/hr</Text>
+          <Button
+            title="Go Here"
+            onPress={() =>
+              openMapApplication(
+                selectedParkingSpot?.latitude,
+                selectedParkingSpot?.longitude,
+              )
+            }
+          />
+          <Button
+            title="Save Spot"
+            onPress={() => saveParkingSpot(selectedParkingSpot)}
+          />
+          <Button title="Close" onPress={() => setSelectedParkingSpot(null)} />
+        </View>
+      )}
     </View>
   );
 }

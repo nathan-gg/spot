@@ -116,6 +116,14 @@ export default function SignInScreen() {
   }
 
   // --- Password Step (Sign Up) ---
+  async function handleSkip() {
+    try {
+      await signInWithEmailAndPassword(auth, "nsgebreab@gmail.com", "nathan123");
+    } catch (error) {
+      console.log(error.message);
+    }
+  }
+
   return (
     <LinearGradient
       colors={["#FFFFFF", "rgba(94, 88, 255, 0.15)"]}
@@ -146,5 +154,16 @@ export default function SignInScreen() {
         <Text style={styles.goBackButtonText}>← Go Back</Text>
       </TouchableOpacity>
     </LinearGradient>
+      {/* Action Buttons */}
+      <View style={styles.buttonContainer}>
+        <Button title="Sign Up" onPress={handleSignUp} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <Button title="Sign In" onPress={handleSignIn} />
+      </View>
+      <View style={styles.buttonContainer}>
+        <Button title="Skip (Dev Only)" onPress={handleSkip} />
+      </View>
+    </View>
   );
 }
