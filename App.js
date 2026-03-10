@@ -140,6 +140,8 @@ function MainTabs() {
   );
 }
 
+
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [mapPreference, setMapPreference] = useState(null);
