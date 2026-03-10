@@ -76,26 +76,36 @@ export default function SavedScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: "#ff9ae7" }}>
-      <FlatList
-        data={savedSpots}
-        keyExtractor={(item) => item.firestoreId}
-        renderItem={({ item }) => (
-          <View
-            style={{ padding: 15, borderBottomWidth: 1, borderColor: "#ccc" }}
-          >
-            <Text>{item.rate}/hr</Text>
-            <Text>{item.timeLimit}</Text>
-            <Button
-              title="Unsave"
-              onPress={() => removeSavedParkingSpot(item.firestoreId)}
-            />
-            <Button
-              title="Go Here"
-              onPress={() => openMapApplication(item.latitude, item.longitude)}
-            />
-          </View>
-        )}
-      />
+      {savedSpots.length === 0 ? (
+        <View
+          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+        >
+          <Text>No saved spots yet.</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={savedSpots}
+          keyExtractor={(item) => item.firestoreId}
+          renderItem={({ item }) => (
+            <View
+              style={{ padding: 15, borderBottomWidth: 1, borderColor: "#ccc" }}
+            >
+              <Text>{item.rate}/hr</Text>
+              <Text>{item.timeLimit}</Text>
+              <Button
+                title="Unsave"
+                onPress={() => removeSavedParkingSpot(item.firestoreId)}
+              />
+              <Button
+                title="Go Here"
+                onPress={() =>
+                  openMapApplication(item.latitude, item.longitude)
+                }
+              />
+            </View>
+          )}
+        />
+      )}
     </View>
   );
 }
