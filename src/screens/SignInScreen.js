@@ -38,7 +38,10 @@ export default function SignInScreen() {
           <View style={[styles.progressDot, styles.progressDotActive]} />
           <View style={styles.progressDot} />
         </View>
-        <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+        <Image
+          source={require("../../assets/spotLogo.png")}
+          style={styles.logo}
+        />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
         <TextInput
@@ -59,7 +62,9 @@ export default function SignInScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setStep("signin")}>
-          <Text style={styles.signInLink}>Already have an account? Sign In</Text>
+          <Text style={styles.signInLink}>
+            Already have an account? Sign In
+          </Text>
         </TouchableOpacity>
       </View>
     );
@@ -75,7 +80,10 @@ export default function SignInScreen() {
           <View style={styles.progressDot} />
         </View>
 
-        <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+        <Image
+          source={require("../../assets/spotLogo.png")}
+          style={styles.logo}
+        />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
         <TextInput
@@ -108,7 +116,13 @@ export default function SignInScreen() {
           <Text style={styles.signUpButtonText}>Sign In</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.goBackButton} onPress={() => { setPassword(""); setStep("email"); }}>
+        <TouchableOpacity
+          style={styles.goBackButton}
+          onPress={() => {
+            setPassword("");
+            setStep("email");
+          }}
+        >
           <Text style={styles.goBackButtonText}>← Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -118,15 +132,19 @@ export default function SignInScreen() {
   // --- Password Step (Sign Up) ---
   async function handleSkip() {
     try {
-      await signInWithEmailAndPassword(auth, "nsgebreab@gmail.com", "nathan123");
+      await signInWithEmailAndPassword(
+        auth,
+        "nsgebreab@gmail.com",
+        "nathan123",
+      );
     } catch (error) {
       console.log(error.message);
     }
   }
 
   return (
-    <LinearGradient
-      colors={["#FFFFFF", "rgba(94, 88, 255, 0.15)"]}
+    <View
+      
       style={styles.container}
     >
       <View style={styles.progressRow}>
@@ -134,7 +152,10 @@ export default function SignInScreen() {
         <View style={[styles.progressDot, styles.progressDotActive]} />
       </View>
 
-      <Image source={require("../../assets/spotLogo.png")} style={styles.logo} />
+      <Image
+        source={require("../../assets/spotLogo.png")}
+        style={styles.logo}
+      />
       <Text style={styles.tagline}>The smarter way to park.</Text>
 
       <TextInput
@@ -150,20 +171,23 @@ export default function SignInScreen() {
         <Text style={styles.signUpButtonText}>Sign Up</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.goBackButton} onPress={() => setStep("email")}>
+      <TouchableOpacity
+        style={styles.goBackButton}
+        onPress={() => setStep("email")}
+      >
         <Text style={styles.goBackButtonText}>← Go Back</Text>
       </TouchableOpacity>
-    </LinearGradient>
-      {/* Action Buttons */}
-      <View style={styles.buttonContainer}>
-        <Button title="Sign Up" onPress={handleSignUp} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button title="Sign In" onPress={handleSignIn} />
-      </View>
-      <View style={styles.buttonContainer}>
-        <Button title="Skip (Dev Only)" onPress={handleSkip} />
-      </View>
     </View>
+    // {/* Action Buttons */}
+    //   <View style={styles.buttonContainer}>
+    //     <Button title="Sign Up" onPress={handleSignUp} />
+    //   </View>
+    //   <View style={styles.buttonContainer}>
+    //     <Button title="Sign In" onPress={handleSignIn} />
+    //   </View>
+    //   <View style={styles.buttonContainer}>
+    //     <Button title="Skip (Dev Only)" onPress={handleSkip} />
+    //   </View>
+    // </View>
   );
 }
