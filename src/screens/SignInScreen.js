@@ -54,6 +54,7 @@ export default function SignInScreen() {
         <View style={styles.progressRow}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
           <View style={styles.progressDot} />
+          <View style={styles.progressDot} />
         </View>
         <Image
           source={require("../../assets/spotLogo.png")}
@@ -94,6 +95,7 @@ export default function SignInScreen() {
       <View style={styles.container}>
         <View style={styles.progressRow}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
+          <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
 
@@ -153,6 +155,7 @@ export default function SignInScreen() {
       <View style={styles.progressRow}>
         <View style={[styles.progressDot, styles.progressDotActive]} />
         <View style={[styles.progressDot, styles.progressDotActive]} />
+        <View style={styles.progressDot} />
       </View>
 
       <Image
