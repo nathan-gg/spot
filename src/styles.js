@@ -203,6 +203,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
+
+  userLocationButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 1000,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
 });
 
 //Sign In Screen

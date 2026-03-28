@@ -9,8 +9,10 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
+
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
 import { Marker } from "react-native-maps";
@@ -26,8 +28,6 @@ import MapPreferenceScreen from "./MapPreferenceScreen";
 import { collection, addDoc } from "firebase/firestore";
 import { db, firebase_auth } from "../firebaseConfig";
 
-// tuff
-
 export default function App() {
   const apiKey = process.env.EXPO_PUBLIC_API_KEY;
   // console.log("This is the apikey", apiKey);
@@ -35,6 +35,7 @@ export default function App() {
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
+  const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); //
 
   // initialize Geocoder with Google Maps API Key
@@ -52,6 +53,8 @@ export default function App() {
       const location = json.results[0].geometry.location;
       const lat = location.lat;
       const lng = location.lng;
+
+      setSearchCoordinates({ latitude: lat, longitude: lng }); // set the search coordinates using the latitude and longitude extracted from the geocoding data
 
       // get data from parkingData.js to put markers on the map for parking spots
       const spots = await getParkingData(lat, lng);
@@ -174,6 +177,21 @@ export default function App() {
     }
   }
 
+  async function goToUserLocation() {
+    console.log(currentLocation);
+
+    try {
+      // smoothly move the camera to the new coordinates
+      currentLocation &&
+        mapRef.current?.animateCamera(
+          { center: currentLocation.coords, zoom: 15 },
+          { duration: 2000 },
+        );
+    } catch (error) {
+      console.warn("Error: ", error);
+    }
+  }
+
   return (
     <View style={styles.container} pointerEvents="box-none">
       <View style={styles.searchWrapper}>
@@ -206,10 +224,19 @@ export default function App() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        showsMyLocationButton
+        // showsMyLocationButton
         showsUserLocation
+        rotateEnabled
         provider={PROVIDER_GOOGLE}
       >
+        {searchCoordinates && ( // first check if the user has entered searchCoordinates, if yes then make marker, if no then short circuit
+          <Marker
+            coordinate={searchCoordinates}
+            title="Destination"
+            description={searchLocation}
+            pinColor="red"
+          />
+        )}
         {parkingSpots.map((parkingSpot) => (
           <Marker
             key={parkingSpot.id}
@@ -227,6 +254,13 @@ export default function App() {
           </Marker>
         ))}
       </MapView>
+
+      <TouchableOpacity
+        style={styles.userLocationButton}
+        onPress={goToUserLocation}
+      >
+        <Ionicons name={"locate"} size={30} color={"#6a65fb"} />
+      </TouchableOpacity>
 
       {selectedParkingSpot && (
         <View style={styles.bottomSheet} pointerEvents="box-none">
