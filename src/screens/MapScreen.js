@@ -37,6 +37,7 @@ export default function App() {
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); //
+  const [filterRadius, setFilterRadius] = useState([]); //
 
   // initialize Geocoder with Google Maps API Key
   Geocoder.init(apiKey);
@@ -255,6 +256,29 @@ export default function App() {
         ))}
       </MapView>
 
+      <View style={styles.radiusFilterWrapper}>
+        {/* search UI Row */}
+        <View style={styles.filterRow}>
+          <Ionicons
+            name="contract"
+            size={18}
+            color="#6a65fb"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.filterInput}
+            onChangeText={setFilterRadius}
+            value={filterRadius}
+            placeholder="Set search radius"
+            placeholderTextColor="8A8A8E"
+            keyboardType="numeric"
+            returnKeyType="search"
+            // onSubmitEditing={performSearch}
+          />
+          <Text>meters</Text>
+        </View>
+      </View>
+
       <TouchableOpacity
         style={styles.userLocationButton}
         onPress={goToUserLocation}
@@ -271,7 +295,7 @@ export default function App() {
             <Text style={styles.spotName}>{selectedParkingSpot?.id}</Text>
             <Text style={styles.spotPrice}>{selectedParkingSpot?.rate}/hr</Text>
           </View>
-          {/* address/description data comming soon */}
+          {/* address/description data coming soon */}
           <Text style={styles.spotAddress}>
             {selectedParkingSpot?.address}123 Address St.
           </Text>
