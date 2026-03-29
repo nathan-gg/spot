@@ -186,26 +186,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-
-{
-  /* <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Password"
-          component={PasswordScreen}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="LocationPerm"
-          component={LocationPermScreen}
-          options={{ headerShown: true }}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{ headerShown: false, gestureEnabled: false }}
-        /> */
-}

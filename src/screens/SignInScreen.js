@@ -1,31 +1,48 @@
+// these are the Firebase functions for creating a new account, and using it to sign in
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
+// this gets the firebase authentication instance from the firebaseConfig file within the app
 import { firebase_auth } from "../firebaseConfig";
 import { signInStyles as styles } from "../styles";
 
+// the main function that is exported and used as a screen within App.js
 export default function SignInScreen() {
+  // a variable to check and update the step of the process that user is on
   const [step, setStep] = useState("email"); // "email" | "password" | "signin"
+  // empty fields that are updated by user input
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // a more concise variable for firebase_auth so that we do not have to copy and paste it everywhere
   const auth = firebase_auth;
-  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // this is a Javascript regex (regular expression) which we implemented to make sure that users are entering real emails, this helps prevent spamming and bots from making accounts
+  // const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
+    email,
+  );
+
+  // this is the function for when users want to sign up for a new account
   async function handleSignUp() {
     try {
+      // this function handles account creation by sending the user's email and password to Firebase
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
+      // if there is an error, such as a repeat email, this will send a message
       alert(error.message);
     }
   }
 
+  // this is the function for when returning users would like to sign in to their account
   async function handleSignIn() {
     try {
+      // this function is used to validate the user's email and password fields with Firebase to check if they have a corresponding account
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
+      // if there is an error, such as a repeat email, this will send a message
       alert(error.message);
     }
   }
@@ -130,23 +147,9 @@ export default function SignInScreen() {
   }
 
   // --- Password Step (Sign Up) ---
-  async function handleSkip() {
-    try {
-      await signInWithEmailAndPassword(
-        auth,
-        "nsgebreab@gmail.com",
-        "nathan123",
-      );
-    } catch (error) {
-      console.log(error.message);
-    }
-  }
 
   return (
-    <View
-      
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <View style={styles.progressRow}>
         <View style={[styles.progressDot, styles.progressDotActive]} />
         <View style={[styles.progressDot, styles.progressDotActive]} />
@@ -178,16 +181,5 @@ export default function SignInScreen() {
         <Text style={styles.goBackButtonText}>← Go Back</Text>
       </TouchableOpacity>
     </View>
-    // {/* Action Buttons */}
-    //   <View style={styles.buttonContainer}>
-    //     <Button title="Sign Up" onPress={handleSignUp} />
-    //   </View>
-    //   <View style={styles.buttonContainer}>
-    //     <Button title="Sign In" onPress={handleSignIn} />
-    //   </View>
-    //   <View style={styles.buttonContainer}>
-    //     <Button title="Skip (Dev Only)" onPress={handleSkip} />
-    //   </View>
-    // </View>
   );
 }

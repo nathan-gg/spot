@@ -134,25 +134,37 @@ export default function App() { // main component for the Map Screen, which disp
     }
   }
 
-  async function openMapApplication(latitude, longitude) { // when the user taps the "Go Here" button in the bottom sheet, this function is called to open the user's preferred map application (Google Maps or Apple Maps) with directions to the selected parking spot using the latitude and longitude coordinates of that spot
-    const preference = await AsyncStorage.getItem("mapPreference"); // retrieve the user's map application preference from AsyncStorage, which was saved when they selected their preferred map app in the MapPreferenceScreen, to determine which map application to open for navigation
+  async function openMapApplication(latitude, longitude) {
+    const preference = await AsyncStorage.getItem("mapPreference");
 
-    if (preference === "google-maps-preference") { // if the user's preference is Google Maps, construct a URL scheme to open Google Maps with directions to the specified latitude and longitude coordinates of the parking spot, and check if the device can open the URL (i.e., if Google Maps is installed), then open it; if Google Maps is not installed, fall back to opening the directions in the web browser using the Google Maps website
-      const url = `comgooglemaps://?daddr=${latitude},${longitude}`; // URL scheme to open Google Maps with directions to the specified latitude and longitude coordinates of the parking spot
+    if (preference === "google-maps-preference") {
+      const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
 
-      const canOpenURL = await Linking.canOpenURL(url); // check if the device can open the URL (i.e., if Google Maps is installed) to ensure that we don't attempt to open an app that isn't available, which would result in an error; if Google Maps is not installed, we will fall back to opening the directions in the web browser using the Google Maps website
+      const canOpenURL = await Linking.canOpenURL(url);
 
-      if (canOpenURL) { // if Google Maps is installed, open the directions in the Google Maps app using the URL scheme with the specified coordinates for the parking spot
+      if (canOpenURL) {
         Linking.openURL(url);
       } else {
-        // if google maps not installed, open in browser
+        // otherwise open on the website
         Linking.openURL(
           `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
         );
       }
+    } else if (preference === "apple-maps-preference") {
+      // repeat the process, but if the user has Apple Maps as their preference
+      const url = `maps://?daddr=${latitude},${longitude}`;
+      const canOpenURL = await Linking.canOpenURL(url);
+      if (canOpenURL) {
+        Linking.openURL(url);
+      } else {
+        // fallback if Apple Maps not available (e.g. Android)
+        Linking.openURL(
+          `https://maps.apple.com/?daddr=${latitude},${longitude}`,
+        );
+      }
     } else {
       // apply all else to apple maps for now
-      Linking.openURL(`maps://?daddr=${latitude},${longitude}`); // URL scheme to open Apple Maps with directions to the specified latitude and longitude coordinates of the parking spot; this will work on iOS devices where Apple Maps is the default map application, and if the user has set their preference to Apple Maps in the MapPreferenceScreen, we will attempt to open the directions in Apple Maps using this URL scheme
+      Linking.openURL(`maps://?daddr=${latitude},${longitude}`);
     }
   }
 
@@ -222,7 +234,7 @@ export default function App() { // main component for the Map Screen, which disp
           <View style={styles.bottomSheetHandle} />
           {/* Name + Price row */}
           <View style={styles.bottomSheetHeader}>
-            <Text style={styles.spotName}>{selectedParkingSpot?.type}</Text>
+            <Text style={styles.spotName}>{selectedParkingSpot?.id}</Text>
             <Text style={styles.spotPrice}>{selectedParkingSpot?.rate}/hr</Text>
           </View>
           {/* address/description data coming soon */}
