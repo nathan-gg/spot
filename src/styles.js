@@ -203,6 +203,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
+
+  //Splash Screen
+  splashContainer: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  splashLogo: {
+    width: 200,
+    height: 200,
+  },
 });
 
 //Sign In Screen
@@ -319,11 +332,6 @@ export const signInStyles = StyleSheet.create({
     textAlign: "center",
     color: PURPLE,
     fontSize: 14,
-  },
-  
-  logo: {
-    width: 200,
-    height: 200,
   },
 });
 
