@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 // this gets the firebase authentication instance from the firebaseConfig file within the app
 import { firebase_auth } from "../firebaseConfig";
+
 import { signInStyles as styles } from "../styles";
 
 // the main function that is exported and used as a screen within App.js
@@ -54,6 +55,7 @@ export default function SignInScreen() {
         <View style={styles.progressRow}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
           <View style={styles.progressDot} />
+          <View style={styles.progressDot} />
         </View>
         <Image
           source={require("../../assets/spotLogo.png")}
@@ -94,6 +96,7 @@ export default function SignInScreen() {
       <View style={styles.container}>
         <View style={styles.progressRow}>
           <View style={[styles.progressDot, styles.progressDotActive]} />
+          <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
 
@@ -153,6 +156,7 @@ export default function SignInScreen() {
       <View style={styles.progressRow}>
         <View style={[styles.progressDot, styles.progressDotActive]} />
         <View style={[styles.progressDot, styles.progressDotActive]} />
+        <View style={styles.progressDot} />
       </View>
 
       <Image

@@ -1,22 +1,24 @@
 import * as Location from "expo-location"; // import expo-location for GPS access
 import React, { useEffect, useRef, useState } from "react"; // useEffect runs code on mount, useRef holds a reference without re-rendering, useState stores reactive values.
 import {
-  Alert, // for native popup alerts
-  Button, // for native buttons
-  Linking, // opens external apps/URLs like google maps
-  Modal, // overlay layer (unused)
-  Pressable, // touchable area with press feedback
-  StyleSheet, // creates style objects (imported but styles come for styles.js)
-  Text, // for displaying text
-  TextInput, // for user text input
-  View, // basic container component
+  Alert,
+  Button,
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import Geocoder from "react-native-geocoding"; // converts text addresses into GPS coordinates using Google Maps API
-import MapView, { PROVIDER_GOOGLE } from "react-native-maps"; // map component and Google Maps provider for better performance and features
-import { Marker } from "react-native-maps"; // map marker component to display parking spots on the map
-import { getParkingData } from "../data/parkingData"; // function to fetch parking spot data based on location
-import AsyncStorage from "@react-native-async-storage/async-storage"; // for storing user preferences 
-// import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
+
+import Geocoder from "react-native-geocoding";
+import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
+import { Marker } from "react-native-maps";
+import { getParkingData } from "../data/parkingData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons"; // icon library for search icon and bookmark icon
 
@@ -26,6 +28,7 @@ import styles from "../styles"; // import styles from styles.js for consistent d
 import { collection, addDoc } from "firebase/firestore"; // Firestore functions to add documents to the database
 import { db, firebase_auth } from "../firebaseConfig"; // import the initialized Firebase app and authentication module to interact with Firestore and manage user authentication
 
+import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
 
 export default function App() { // main component for the Map Screen, which displays the map, search functionality, and parking spot details
   const apiKey = process.env.EXPO_PUBLIC_API_KEY; // store the Google Maps API key in a variable for easy access when initializing the Geocoder and making geocoding requests
@@ -34,7 +37,9 @@ export default function App() { // main component for the Map Screen, which disp
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
-  const [parkingSpots, setParkingSpots] = useState([]); // stores the list of parking spots retrieved from the parkingData.js file based on the searched location
+  const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
+  const [parkingSpots, setParkingSpots] = useState([]); //
+  const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
 
   // initialize Geocoder with Google Maps API Key
   Geocoder.init(apiKey);
@@ -51,6 +56,8 @@ export default function App() { // main component for the Map Screen, which disp
       const location = json.results[0].geometry.location; // extract the lat and lng from the geocoding response to use for fetching parking data and moving map camera
       const lat = location.lat; // extract latitude from geocoding response
       const lng = location.lng; // extract longitude from geocoding response
+
+      setSearchCoordinates({ latitude: lat, longitude: lng }); // set the search coordinates using the latitude and longitude extracted from the geocoding data
 
       // get data from parkingData.js to put markers on the map for parking spots
       const spots = await getParkingData(lat, lng);
@@ -168,9 +175,35 @@ export default function App() { // main component for the Map Screen, which disp
     }
   }
 
-  return ( // the main return statement of the component, which renders the map, search UI, parking spot markers, and bottom sheet with parking spot details based on the current state of the component
-    <View style={styles.container} pointerEvents="box-none"> 
-      <View style={styles.searchWrapper}> 
+  async function goToUserLocation() {
+    console.log(currentLocation);
+
+    try {
+      // smoothly move the camera to the new coordinates
+      currentLocation &&
+        mapRef.current?.animateCamera(
+          { center: currentLocation.coords, zoom: 15 },
+          { duration: 2000 },
+        );
+    } catch (error) {
+      console.warn("Error: ", error);
+    }
+  }
+
+  function checkDistanceToSpot(spot) {
+    console.log("checking distance");
+    return getDistance(
+      { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
+      {
+        latitude: searchCoordinates.latitude,
+        longitude: searchCoordinates.longitude,
+      },
+    );
+  }
+
+  return (
+    <View style={styles.container} pointerEvents="box-none">
+      <View style={styles.searchWrapper}>
         {/* search UI Row */}
         <View style={styles.searchRow}>
           {/* Icon from react library */}
@@ -203,31 +236,76 @@ export default function App() { // main component for the Map Screen, which disp
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        showsMyLocationButton
+        // showsMyLocationButton
         showsUserLocation
+        rotateEnabled
         provider={PROVIDER_GOOGLE}
       >
-        {/* Parking spot markers */}
-        {parkingSpots.map((parkingSpot) => (
+        {searchCoordinates && ( // first check if the user has entered searchCoordinates, if yes then make marker, if no then short circuit
           <Marker
-            key={parkingSpot.id} // use the id from the parkingData.js file as the key for each marker to ensure that each marker has a unique identifier, which is important for performance and correct rendering in React; this id is not related to Firestore but is simply an identifier for the parking spot data being displayed on the map
-            coordinate={{ // set the coordinates of the marker to the latitude and longitude of the parking spot from the parkingData.js file to display it in the correct location on the map
-              latitude: parkingSpot.latitude,
-              longitude: parkingSpot.longitude,
-            }}
-            title={parkingSpot.type} // set the title of the marker to the type of parking spot (e.g., "Metered", "Free", "Garage") from the parkingData.js file, which will be displayed when the user taps on the marker to provide more information about that parking spot
-            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`} // set the description of the marker to display the hourly rate and time limit of the parking spot from the parkingData.js file, which will be shown in the callout when the user taps on the marker to provide additional details about that parking spot
-            onPress={() => handleMarkerPress(parkingSpot)} // when the marker is pressed, call the handleMarkerPress function with the parking spot data as an argument to update the selectedParkingSpot state and display the bottom sheet with details about that parking spot
-          >
-            <View style={styles.mapMarker}> 
-              {/* Marker content */}
-              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text> 
-            </View>
-          </Marker>
-        ))}
+            coordinate={searchCoordinates}
+            title="Destination"
+            description={searchLocation}
+            pinColor="red"
+          />
+        )}
+        {parkingSpots
+          .filter(
+            (
+              parkingSpot, // filter to check if the spots shown pass the user distance filter or not
+            ) =>
+              filterRadius === "" || // if the value in filterRadius is empty (user has not input anything), then show all items
+              !searchCoordinates || // checks that the user has actually made a search before trying to filter out spots, otherwise it will crash when it tries to calculate distance to esch spot
+              checkDistanceToSpot(parkingSpot) <= Number(filterRadius), // call the checkDistanceToSpot function which uses the geolib library to check how far the distance is from the users searchCoords to each parking spot, then filters out the spot if its beyond the user's search radius
+          )
+          .map((parkingSpot) => (
+            <Marker
+              key={parkingSpot.id}
+              coordinate={{
+                latitude: parkingSpot.latitude,
+                longitude: parkingSpot.longitude,
+              }}
+              title={parkingSpot.type}
+              description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+              onPress={() => handleMarkerPress(parkingSpot)}
+            >
+              <View style={styles.mapMarker}>
+                <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+              </View>
+            </Marker>
+          ))}
       </MapView>
 
-      {/* Bottom sheet for selected parking spot */}
+      <View style={styles.radiusFilterWrapper}>
+        {/* search UI Row */}
+        <View style={styles.filterRow}>
+          <Ionicons
+            name="contract"
+            size={18}
+            color="#6a65fb"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.filterInput}
+            onChangeText={setFilterRadius}
+            value={filterRadius}
+            placeholder="Set search radius"
+            placeholderTextColor="8A8A8E"
+            keyboardType="numeric"
+            returnKeyType="search"
+            // onSubmitEditing={performSearch}
+          />
+          <Text>meters</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={styles.userLocationButton}
+        onPress={goToUserLocation}
+      >
+        <Ionicons name={"locate"} size={30} color={"#6a65fb"} />
+      </TouchableOpacity>
+
       {selectedParkingSpot && (
         <View style={styles.bottomSheet} pointerEvents="box-none">
           {/* Drag handle */}

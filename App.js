@@ -4,6 +4,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //firebase user authentication imports
 import { onAuthStateChanged } from "firebase/auth";
@@ -112,6 +113,7 @@ export default function App() {
 
   useEffect(() => {
     async function checkMapPreference() {
+      // await AsyncStorage.clear(); // TEMP - remove when done testing***********!!!!!!
       const preference = await AsyncStorage.getItem("mapPreference");
       setMapPreference(preference);
     }
