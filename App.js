@@ -4,12 +4,12 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 //firebase user authentication imports
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { firebase_auth } from "./src/firebaseConfig";
-import ProtectedAreaScreen from "./src/screens/ProtectedAreaScreen";
 import SignInScreen from "./src/screens/SignInScreen";
 import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
 
@@ -24,44 +24,6 @@ import HomeScreen from "./src/screens/HomeScreen.js";
 //navigators
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-//Functions (Each Tab has its own stack within!) ** DUE TO CHANGE
-// ATM The SettingsScreen can be accessed from each tab just as place holders
-function Tab1Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 1" component={Tab1Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab2Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 2" component={Tab2Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab3Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 3" component={Tab3Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
-
-function Tab4Stack() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Tab 4" component={Tab4Screen} />
-      {/* <Stack.Screen name="Settings" component={SettingsScreen} /> */}
-    </Stack.Navigator>
-  );
-}
 
 //Main Navigation Bar at Bottom, holding all Tabs
 function MainTabs() {
@@ -149,6 +111,7 @@ export default function App() {
 
   useEffect(() => {
     async function checkMapPreference() {
+      // await AsyncStorage.clear(); // TEMP - remove when done testing***********!!!!!!
       const preference = await AsyncStorage.getItem("mapPreference");
       setMapPreference(preference);
     }
