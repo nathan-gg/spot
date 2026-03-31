@@ -369,6 +369,11 @@ export const signInStyles = StyleSheet.create({
     color: PURPLE,
     fontSize: 14,
   },
+  
+  logo: {
+    width: 200,
+    height: 200,
+  },
 });
 
 export const mapPrefStyles = StyleSheet.create({

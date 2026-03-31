@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { firebase_auth } from "./src/firebaseConfig";
 import SignInScreen from "./src/screens/SignInScreen";
 import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
+import SplashAnimation from "./src/screens/SplashAnimation";
 
 // import Settings Screen ** FILE NAMES TO BE CHANGED
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -107,6 +108,7 @@ function MainTabs() {
 export default function App() {
   const [user, setUser] = useState(null);
   const [mapPreference, setMapPreference] = useState(null);
+  const [showSplash, setShowSplash] = useState(true);
   const ProtectedStack = createNativeStackNavigator();
 
   useEffect(() => {
@@ -148,6 +150,10 @@ export default function App() {
       setUser(user);
     });
   }, []);
+
+  if (showSplash) {
+    return <SplashAnimation onFinish={() => setShowSplash(false)} />;
+  }
 
   return (
     <NavigationContainer>
