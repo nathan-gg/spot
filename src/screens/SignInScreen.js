@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Image, Text, TextInput, TouchableOpacity, View } from "react-native";
 // this gets the firebase authentication instance from the firebaseConfig file within the app
 import { firebase_auth } from "../firebaseConfig";
+
 import { signInStyles as styles } from "../styles";
 
 // the main function that is exported and used as a screen within App.js
