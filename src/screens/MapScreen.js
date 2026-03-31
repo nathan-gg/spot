@@ -28,6 +28,8 @@ import MapPreferenceScreen from "./MapPreferenceScreen";
 import { collection, addDoc } from "firebase/firestore";
 import { db, firebase_auth } from "../firebaseConfig";
 
+import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
+
 export default function App() {
   const apiKey = process.env.EXPO_PUBLIC_API_KEY;
   // console.log("This is the apikey", apiKey);
@@ -37,7 +39,7 @@ export default function App() {
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); //
-  const [filterRadius, setFilterRadius] = useState([]); //
+  const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
 
   // initialize Geocoder with Google Maps API Key
   Geocoder.init(apiKey);
@@ -193,6 +195,17 @@ export default function App() {
     }
   }
 
+  function checkDistanceToSpot(spot) {
+    console.log("checking distance");
+    return getDistance(
+      { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
+      {
+        latitude: searchCoordinates.latitude,
+        longitude: searchCoordinates.longitude,
+      },
+    );
+  }
+
   return (
     <View style={styles.container} pointerEvents="box-none">
       <View style={styles.searchWrapper}>
@@ -238,22 +251,31 @@ export default function App() {
             pinColor="red"
           />
         )}
-        {parkingSpots.map((parkingSpot) => (
-          <Marker
-            key={parkingSpot.id}
-            coordinate={{
-              latitude: parkingSpot.latitude,
-              longitude: parkingSpot.longitude,
-            }}
-            title={parkingSpot.type}
-            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
-            onPress={() => handleMarkerPress(parkingSpot)}
-          >
-            <View style={styles.mapMarker}>
-              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
-            </View>
-          </Marker>
-        ))}
+        {parkingSpots
+          .filter(
+            (
+              parkingSpot, // filter to check if the spots shown pass the user distance filter or not
+            ) =>
+              filterRadius === "" || // if the value in filterRadius is empty (user has not input anything), then show all items
+              !searchCoordinates || // checks that the user has actually made a search before trying to filter out spots, otherwise it will crash when it tries to calculate distance to esch spot
+              checkDistanceToSpot(parkingSpot) <= Number(filterRadius), // call the checkDistanceToSpot function which uses the geolib library to check how far the distance is from the users searchCoords to each parking spot, then filters out the spot if its beyond the user's search radius
+          )
+          .map((parkingSpot) => (
+            <Marker
+              key={parkingSpot.id}
+              coordinate={{
+                latitude: parkingSpot.latitude,
+                longitude: parkingSpot.longitude,
+              }}
+              title={parkingSpot.type}
+              description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+              onPress={() => handleMarkerPress(parkingSpot)}
+            >
+              <View style={styles.mapMarker}>
+                <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+              </View>
+            </Marker>
+          ))}
       </MapView>
 
       <View style={styles.radiusFilterWrapper}>
