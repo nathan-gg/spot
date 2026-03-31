@@ -322,4 +322,58 @@ export const signInStyles = StyleSheet.create({
   },
 });
 
+export const mapPrefStyles = StyleSheet.create({
+  mapPrefContainer: {
+    flex: 1,
+    backgroundColor: WHITE,
+    paddingHorizontal: 28,
+    paddingTop: 80,
+    // alignItems: "center",
+  },
+
+  mapPrefImage: {
+    width: "100%",
+    height: 220,
+    marginTop: 40,
+    marginBottom: 32,
+  },
+
+  mapPrefTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+
+  mapPrefBody: {
+    fontSize: 15,
+    color: "#383838",
+    lineHeight: 22,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  mapPrefHint: {
+    fontSize: 15,
+    color: GRAY_TEXT,
+    marginBottom: 36,
+    textAlign: "center",
+  },
+
+  mapPrefButton: {
+    backgroundColor: PURPLE,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  mapPrefButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
 export default styles;
