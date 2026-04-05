@@ -113,7 +113,7 @@ export default function App() {
 
   useEffect(() => {
     async function checkMapPreference() {
-      // await AsyncStorage.clear(); // TEMP - remove when done testing***********!!!!!!
+      await AsyncStorage.clear(); // TEMP - remove when done testing*****THIS CLEARS MAP PREFERENC******!!!!!!
       const preference = await AsyncStorage.getItem("mapPreference");
       setMapPreference(preference);
     }

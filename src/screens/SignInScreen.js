@@ -17,6 +17,17 @@ export default function SignInScreen() {
   // empty fields that are updated by user input
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const passwordRules = [
+    //checklist of our password requirements
+    { label: "At least 8 characters", test: (p) => p.length >= 8 },
+    { label: "One uppercase letter", test: (p) => /[A-Z]/.test(p) },
+    { label: "One number", test: (p) => /[0-9]/.test(p) },
+  ];
+
+  //check if all meet req.
+  const allRulesPassed = passwordRules.every((r) => r.test(password));
+
   // a more concise variable for firebase_auth so that we do not have to copy and paste it everywhere
   const auth = firebase_auth;
 
@@ -26,6 +37,26 @@ export default function SignInScreen() {
     email,
   );
 
+  function getAuthError(code) {
+    switch (code) {
+      case "auth/email-already-in-use":
+        return "That email is already registered. Try signing in instead.";
+      case "auth/invalid-email":
+        return "Please enter a valid email address.";
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        return "Incorrect email or password. Please try again.";
+      case "auth/user-not-found":
+        return "No account found with that email. Try signing up.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a moment and try again.";
+      case "auth/network-request-failed":
+        return "No internet connection. Please check your wifi and try again.";
+      default:
+        return "Something went wrong. Please try again.";
+    }
+  }
+
   // this is the function for when users want to sign up for a new account
   async function handleSignUp() {
     try {
@@ -33,7 +64,7 @@ export default function SignInScreen() {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
       // if there is an error, such as a repeat email, this will send a message
-      alert(error.message);
+      alert(getAuthError(error.code));
     }
   }
 
@@ -44,7 +75,7 @@ export default function SignInScreen() {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       // if there is an error, such as a repeat email, this will send a message
-      alert(error.message);
+      alert(getAuthError(error.code));
     }
   }
 
@@ -174,7 +205,28 @@ export default function SignInScreen() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
+      <View style={{ marginBottom: 8 }}>
+        {passwordRules.map((rule) => {
+          const passed = rule.test(password);
+          return (
+            <Text
+              key={rule.label}
+              style={{
+                color: passed ? "#31ab31" : "#aaa",
+                fontSize: 13,
+                marginBottom: 4,
+              }}
+            >
+              {passed ? "✓" : "○"} {rule.label}
+            </Text>
+          );
+        })}
+      </View>
+
+      <TouchableOpacity
+        style={[styles.signUpButton, { opacity: allRulesPassed ? 1 : 0.4 }]}
+        onPress={() => allRulesPassed && handleSignUp()}
+      >
         <Text style={styles.signUpButtonText}>Sign Up</Text>
       </TouchableOpacity>
 
