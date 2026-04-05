@@ -1,5 +1,11 @@
 import * as Location from "expo-location"; // import expo-location for GPS access
-import React, { useEffect, useRef, useState } from "react"; // useEffect runs code on mount, useRef holds a reference without re-rendering, useState stores reactive values.
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  useCallback,
+} from "react"; // useEffect runs code on mount, useRef holds a reference without re-rendering, useState stores reactive values, useMemo caches calculated values for checkDistanceToParkingSpot() to make sure its not needlessly re-rendering, useCallback caches functions so they are not created as new objects on every re-render
 import {
   Alert,
   Button,
@@ -30,8 +36,13 @@ import { db, firebase_auth } from "../firebaseConfig"; // import the initialized
 
 import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
 
-export default function App() { // main component for the Map Screen, which displays the map, search functionality, and parking spot details
-  const apiKey = process.env.EXPO_PUBLIC_API_KEY; // store the Google Maps API key in a variable for easy access when initializing the Geocoder and making geocoding requests
+const apiKey = process.env.EXPO_PUBLIC_API_KEY; // store the Google Maps API key in a variable for easy access when initializing the Geocoder and making geocoding requests
+
+// initialize Geocoder on mount with Google Maps API Key
+Geocoder.init(apiKey);
+
+export default function App() {
+  // main component for the Map Screen, which displays the map, search functionality, and parking spot details
   // console.log("This is the apikey", apiKey);
 
   // state management
@@ -40,9 +51,6 @@ export default function App() { // main component for the Map Screen, which disp
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); //
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
-
-  // initialize Geocoder with Google Maps API Key
-  Geocoder.init(apiKey);
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -63,7 +71,8 @@ export default function App() { // main component for the Map Screen, which disp
       const spots = await getParkingData(lat, lng);
       setParkingSpots(spots); // update state with the retrieved parking spots, which will trigger a re-render and display the markers on the map
 
-      const searchedLocation = { // create a region object for the map camera to move to, using the lat and lng from the geocoding response
+      const searchedLocation = {
+        // create a region object for the map camera to move to, using the lat and lng from the geocoding response
         latitude: location.lat, // set the latitude to the lat from geocoding
         longitude: location.lng, // set the longitude to the lng from geocoding
 
@@ -73,11 +82,12 @@ export default function App() { // main component for the Map Screen, which disp
       };
 
       // smoothly move the camera to the new coordinates
-      mapRef.current?.animateCamera( 
+      mapRef.current?.animateCamera(
         { center: searchedLocation, zoom: 15 }, // animate the camera to the searched location with a zoom level of 15 for a closer view of the parking spots
         { duration: 2000 }, // set the animation duration to 2000 milliseconds (2 seconds) for a smooth transition to the new location on the map
       );
-    } catch (error) { // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
+    } catch (error) {
+      // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
       console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
     }
   }
@@ -90,19 +100,21 @@ export default function App() { // main component for the Map Screen, which disp
       // request permission to access device location
       let { status } = await Location.requestForegroundPermissionsAsync();
 
-      if (status !== "granted") { // if permission is denied, log a message and exit the function to prevent further attempts to access location data
-        console.log("Permission to access location was denied"); 
+      if (status !== "granted") {
+        // if permission is denied, log a message and exit the function to prevent further attempts to access location data
+        console.log("Permission to access location was denied");
         return; // exit the function early since we don't have permission to access location, preventing any errors that would occur from trying to access location data without permission
       }
 
       // get current GPS position
       let location = await Location.getCurrentPositionAsync({});
 
-      if (location) { // if location data is successfully retrieved, update currentLocation state with the retrieved location data, which includes the latitude and longitude coordinates of the user's current position
+      if (location) {
+        // if location data is successfully retrieved, update currentLocation state with the retrieved location data, which includes the latitude and longitude coordinates of the user's current position
         setCurrentLocation(location);
-        console.log(
-          `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
-        );
+        // console.log(
+        //   `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
+        // );
       } else {
         console.log("Current location not obtained");
       }
@@ -112,8 +124,9 @@ export default function App() { // main component for the Map Screen, which disp
   const [selectedParkingSpot, setSelectedParkingSpot] = useState(null); // state to track which parking spot marker has been selected by the user, used to display the bottom sheet with details about the selected parking spot
   // const [modalVisible, setModalVisible] = useState(false);
 
-  function handleMarkerPress(spot) { // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
-    console.log("Marker pressed: ", spot); 
+  function handleMarkerPress(spot) {
+    // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
+    console.log("Marker pressed: ", spot);
     setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
   }
 
@@ -190,16 +203,32 @@ export default function App() { // main component for the Map Screen, which disp
     }
   }
 
-  function checkDistanceToSpot(spot) {
-    console.log("checking distance");
-    return getDistance(
-      { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
-      {
-        latitude: searchCoordinates.latitude,
-        longitude: searchCoordinates.longitude,
-      },
+  const checkDistanceToSpot = useCallback(
+    (spot) => {
+      // useCallback to only check the distance between the searchCoordinates and parkingSpot if the search destination or filter radius value have changed
+      console.log("recalculating distance for spot:", spot.id); // for testing that each of the 20 spots are being calculated
+      return getDistance(
+        { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
+        {
+          latitude: searchCoordinates.latitude,
+          longitude: searchCoordinates.longitude,
+        },
+      );
+    },
+    [searchCoordinates],
+  ); // dependencies to control when this function is called
+
+  const visibleSpots = useMemo(() => {
+    // useMemo to check if values have changed or if they match the already cached values and don't need to be re-rendered
+    return parkingSpots.filter(
+      (
+        spot, // filter to check if the spots shown pass the user distance filter or not
+      ) =>
+        filterRadius === "" || // if the value in filterRadius is empty (user has not input anything), then show all items
+        !searchCoordinates || // checks that the user has actually made a search before trying to filter out spots, otherwise it will crash when it tries to calculate distance to esch spot
+        checkDistanceToSpot(spot) <= Number(filterRadius), // call the checkDistanceToSpot function which uses the geolib library to check how far the distance is from the users searchCoords to each parking spot, then filters out the spot if its beyond the user's search radius
     );
-  }
+  }, [parkingSpots, filterRadius, searchCoordinates]); // dependencies to control when this function is called
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -214,8 +243,8 @@ export default function App() { // main component for the Map Screen, which disp
             style={styles.searchIcon}
           />
           <TextInput
-          // Text input for the user to type in a location they want to search for parking near, which updates the searchLocation state as they type, and when they submit the search (e.g., by pressing the "search" button on the keyboard), it triggers the performSearch function to geocode the address, fetch parking data, and move the map camera to the searched location
-            style={styles.input} 
+            // Text input for the user to type in a location they want to search for parking near, which updates the searchLocation state as they type, and when they submit the search (e.g., by pressing the "search" button on the keyboard), it triggers the performSearch function to geocode the address, fetch parking data, and move the map camera to the searched location
+            style={styles.input}
             onChangeText={setSearchLocation}
             value={searchLocation}
             placeholder="Find your next destination"
@@ -227,7 +256,7 @@ export default function App() { // main component for the Map Screen, which disp
       </View>
 
       <MapView
-      // Map component from react-native-maps that displays the map, user's location, and parking spot markers; it is configured to use Google Maps as the provider for better performance and features, and it is set to show the user's current location with a button to center the map on their location; the mapRef is attached to this component to allow for programmatic control of the camera (e.g., moving to searched locations)
+        // Map component from react-native-maps that displays the map, user's location, and parking spot markers; it is configured to use Google Maps as the provider for better performance and features, and it is set to show the user's current location with a button to center the map on their location; the mapRef is attached to this component to allow for programmatic control of the camera (e.g., moving to searched locations)
         style={styles.map}
         ref={mapRef}
         initialRegion={{
@@ -249,31 +278,22 @@ export default function App() { // main component for the Map Screen, which disp
             pinColor="red"
           />
         )}
-        {parkingSpots
-          .filter(
-            (
-              parkingSpot, // filter to check if the spots shown pass the user distance filter or not
-            ) =>
-              filterRadius === "" || // if the value in filterRadius is empty (user has not input anything), then show all items
-              !searchCoordinates || // checks that the user has actually made a search before trying to filter out spots, otherwise it will crash when it tries to calculate distance to esch spot
-              checkDistanceToSpot(parkingSpot) <= Number(filterRadius), // call the checkDistanceToSpot function which uses the geolib library to check how far the distance is from the users searchCoords to each parking spot, then filters out the spot if its beyond the user's search radius
-          )
-          .map((parkingSpot) => (
-            <Marker
-              key={parkingSpot.id}
-              coordinate={{
-                latitude: parkingSpot.latitude,
-                longitude: parkingSpot.longitude,
-              }}
-              title={parkingSpot.type}
-              description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
-              onPress={() => handleMarkerPress(parkingSpot)}
-            >
-              <View style={styles.mapMarker}>
-                <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
-              </View>
-            </Marker>
-          ))}
+        {visibleSpots.map((parkingSpot) => (
+          <Marker
+            key={parkingSpot.id}
+            coordinate={{
+              latitude: parkingSpot.latitude,
+              longitude: parkingSpot.longitude,
+            }}
+            title={parkingSpot.type}
+            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            onPress={() => handleMarkerPress(parkingSpot)}
+          >
+            <View style={styles.mapMarker}>
+              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+            </View>
+          </Marker>
+        ))}
       </MapView>
 
       <View style={styles.radiusFilterWrapper}>
@@ -344,13 +364,14 @@ export default function App() { // main component for the Map Screen, which disp
           <Pressable
             style={styles.parkButton}
             onPress={() =>
-              openMapApplication( // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
+              openMapApplication(
+                // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
                 selectedParkingSpot?.latitude,
                 selectedParkingSpot?.longitude,
               )
             }
           >
-            <Text style={styles.parkButtonText}>Go Here</Text> 
+            <Text style={styles.parkButtonText}>Go Here</Text>
           </Pressable>
           <Button
             title="Save Spot"
