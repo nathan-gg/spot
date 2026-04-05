@@ -31,7 +31,15 @@ import { Ionicons } from "@expo/vector-icons"; // icon library for search icon a
 import styles from "../styles"; // import styles from styles.js for consistent design across the app
 // import MapPreferenceScreen from "./MapPreferenceScreen";
 
-import { collection, addDoc } from "firebase/firestore"; // Firestore functions to add documents to the database
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore"; // Firestore functions to add documents to the database
 import { db, firebase_auth } from "../firebaseConfig"; // import the initialized Firebase app and authentication module to interact with Firestore and manage user authentication
 
 import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
@@ -52,6 +60,7 @@ export default function App() {
   const [parkingSpots, setParkingSpots] = useState([]); // stores current fetched parking spots
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
+  const [isSpotSaved, setIsSpotSaved] = useState(false);
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -135,20 +144,35 @@ export default function App() {
   // using an async function with await makes it so the function is able to pause until the answer is retrieved, rather than breaking
   async function saveParkingSpot(parkingSpot) {
     try {
-      // add a new "document" to the Firestore collection (database) based on whats currently in the form when a parking spot is saved, then Firestore auto generates an id
-      const docRef = await addDoc(collection(db, "savedParkingSpots"), {
-        userId: firebase_auth.currentUser.uid, // associate the saved parking spot with the currently authenticated user by storing their unique user ID from Firebase Authentication, allowing us to later query and display only the parking spots that a specific user has saved
-        id: parkingSpot.id, // store the id of the parking spot from the parkingData.js file to identify which spot was saved
-        type: parkingSpot.type, // store the type of parking spot (e.g., "Metered", "Free", "Garage") from the parkingData.js file to display in the user's saved spots list and details
-        latitude: parkingSpot.latitude, // store the latitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
-        longitude: parkingSpot.longitude, // store the longitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
-        rate: parkingSpot.rate, // store the hourly rate of the parking spot from the parkingData.js file to display in the user's saved spots list and details
-        timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
-        dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
-      });
-      // should log the id and clear form, but clearing not working?, then shows a native success popup
-      console.log("Document written with ID: ", docRef.id);
-      Alert.alert(`Spot Saved!`);
+      const q = query(
+        collection(db, "savedParkingSpots"),
+        where("userId", "==", firebase_auth.currentUser.uid),
+        where("id", "==", parkingSpot.id),
+      );
+
+      const querySnapshot = await getDocs(q);
+
+      setIsSpotSaved(querySnapshot.empty ? false : true);
+
+      if (querySnapshot.empty) {
+        const docRef = await addDoc(collection(db, "savedParkingSpots"), {
+          userId: firebase_auth.currentUser.uid, // associate the saved parking spot with the currently authenticated user by storing their unique user ID from Firebase Authentication, allowing us to later query and display only the parking spots that a specific user has saved
+          id: parkingSpot.id, // store the id of the parking spot from the parkingData.js file to identify which spot was saved
+          type: parkingSpot.type, // store the type of parking spot (e.g., "Metered", "Free", "Garage") from the parkingData.js file to display in the user's saved spots list and details
+          latitude: parkingSpot.latitude, // store the latitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
+          longitude: parkingSpot.longitude, // store the longitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
+          rate: parkingSpot.rate, // store the hourly rate of the parking spot from the parkingData.js file to display in the user's saved spots list and details
+          timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+          dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
+        });
+        // should log the id and clear form, but clearing not working?, then shows a native success popup
+        console.log("Document written with ID: ", docRef.id);
+        Alert.alert(`Spot Saved!`);
+      } else {
+        const spotAlreadySaved = querySnapshot.docs[0];
+        await deleteDoc(doc(db, "savedParkingSpots", spotAlreadySaved.id));
+        Alert.alert("Spot Removed from Saved");
+      }
     } catch (e) {
       //catch any errors like: no connection to db, no write permissions to db, invalid data, etc
       console.error("Error adding document: ", e);
@@ -429,7 +453,16 @@ export default function App() {
           </Text>
 
           {/* Save Button */}
-          <Ionicons name="bookmark-outline" size={22} color="#6C63FF" />
+
+          <TouchableOpacity
+            onPress={() => saveParkingSpot(selectedParkingSpot)}
+          >
+            <Ionicons
+              name={isSpotSaved ? "bookmark-outline" : "bookmark"}
+              size={22}
+              color="#6C63FF"
+            />
+          </TouchableOpacity>
 
           {/* Star rating — hardcoded at 4 stars for now, swap with real data later */}
           <View style={styles.starsRow}>
@@ -456,10 +489,10 @@ export default function App() {
           >
             <Text style={styles.parkButtonText}>Go Here</Text>
           </Pressable>
-          <Button
+          {/* <Button
             title="Save Spot"
             onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
-          />
+          /> */}
 
           {/* Close */}
           <Pressable

@@ -11,7 +11,7 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 - APIs
   - Google Geocoding API https://console.cloud.google.com/apis/library/geocoding-backend.googleapis.com?project=fleet-diagram-488905-g9
   - Vancouver Open Data API https://opendata.vancouver.ca/explore/dataset/parking-meters/api/
-  - Google Places API: Place Autocomplete (Legacy) https://developers.google.com/maps/documentation/places/web-service/legacy/autocomplete#PlaceAutocompleteStructuredFormat 
+  - Google Places API: Place Autocomplete (Legacy) https://developers.google.com/maps/documentation/places/web-service/legacy/autocomplete#PlaceAutocompleteStructuredFormat
 
 - Installations
   - React Native Bottom Sheet by Gorhom https://gorhom.dev/react-native-bottom-sheet/
@@ -33,6 +33,8 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 
   - Lecture 8 https://canvas.sfu.ca/courses/9235/files/2079062?module_item_id=597864
 
+  - Lecture 10 https://canvas.sfu.ca/courses/9235/files/2212665?module_item_id=613137
+
 - React/React Native Documentation
   - FlatList https://reactnative.dev/docs/flatlist
   - Modal https://reactnative.dev/docs/modal
@@ -45,5 +47,6 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
   - react-native-maps https://www.npmjs.com/package/react-native-maps
   - Expo Documentation for react-native-maps https://docs.expo.dev/versions/latest/sdk/map-view/
   - Google Maps URL Scheme for iOS https://developers.google.com/maps/documentation/urls/ios-urlscheme
-  - Apple URL Scheme Reference: Map Links https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
-
+  - Apple URL Scheme Reference Map Links https://developer.apple.com/library/archive/featuredarticles/iPhoneURLScheme_Reference/MapLinks/MapLinks.html
+  - Firebase Document Retrieval https://firebase.google.com/docs/firestore/query-data/get-data
+  - Checking if Firebase Document is Empty https://www.reddit.com/r/Firebase/comments/kh7w85/firestore_how_to_1_check_if_query_is_empty_2_get/#:~:text=Comments%20Section,%E2%80%A2%203y%20ago 
