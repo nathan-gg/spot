@@ -11,6 +11,7 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 - APIs
   - Google Geocoding API https://console.cloud.google.com/apis/library/geocoding-backend.googleapis.com?project=fleet-diagram-488905-g9
   - Vancouver Open Data API https://opendata.vancouver.ca/explore/dataset/parking-meters/api/
+  - Google Places API: Place Autocomplete (Legacy) https://developers.google.com/maps/documentation/places/web-service/legacy/autocomplete#PlaceAutocompleteStructuredFormat 
 
 - Installations
   - React Native Bottom Sheet by Gorhom https://gorhom.dev/react-native-bottom-sheet/
@@ -32,10 +33,12 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
 
   - Lecture 8 https://canvas.sfu.ca/courses/9235/files/2079062?module_item_id=597864
 
-- React Native Documentation
+- React/React Native Documentation
   - FlatList https://reactnative.dev/docs/flatlist
   - Modal https://reactnative.dev/docs/modal
   - Linking https://reactnative.dev/docs/next/linking
+  - useMemo https://react.dev/reference/react/useMemo#usage
+  - useCallback https://react.dev/reference/react/useCallback
 
 - External Research
   - Customize your Auth Dependencies https://firebase.google.com/docs/auth/web/custom-dependencies

@@ -49,8 +49,9 @@ export default function App() {
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
   const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
-  const [parkingSpots, setParkingSpots] = useState([]); //
+  const [parkingSpots, setParkingSpots] = useState([]); // stores current fetched parking spots
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -203,6 +204,21 @@ export default function App() {
     }
   }
 
+  async function resetMapRotation() {
+    // console.log(currentLocation);
+
+    try {
+      // reset the map camera's rotation to North
+      mapRef.current?.animateCamera({ heading: 0 });
+    } catch (error) {
+      console.warn("Error: ", error);
+    }
+  }
+
+  function clearSearchLocation() {
+    setSearchLocation("");
+  }
+
   const checkDistanceToSpot = useCallback(
     (spot) => {
       // useCallback to only check the distance between the searchCoordinates and parkingSpot if the search destination or filter radius value have changed
@@ -230,6 +246,35 @@ export default function App() {
     );
   }, [parkingSpots, filterRadius, searchCoordinates]); // dependencies to control when this function is called
 
+  useEffect(() => {
+    // function to show autocomplete search results as the user types in their destination using the Google Places API
+    if (!searchLocation || searchLocation.length < 3) {
+      // check if user has typed anything, if the value is null, or there is only 3 characters in the bar, do not return autocomplete suggestions for places
+      setAutocompleteSuggestions([]);
+      return;
+    }
+
+    const location = currentLocation // this gets the users location so that the autocomplete automatically looks for areas close to the user (in this case Vancouver)
+      ? `${currentLocation.coords.latitude},${currentLocation.coords.longitude}` //the ternary operator will first check if the user's location has been retrieved
+      : `49.2827,-123.1207`; // if the app can't get the user's location (GPS permissions denied or inactive), just use the default coordinates for Vancouver
+
+    const fetchAutocompleteSuggestions = async () => {
+      // fetch autocomplete suggestions and assign the array to this variable (async used because the user may have slow wifi connection or no connection and this will avoid a crash while fetching Places API data)
+      try {
+        const response = await fetch(
+          // fetch the data using the format defined by the Google Places API: 'input' is the the users search (encodeURIComponent() is necessary to encode non-alphanumerical characters into urls like spaces and symbols), 'components:country:ca' is used to limit the autocomplete resuults to Canada, 'location' is set to the user's location or Vancouver, if GPS data is not available, 'radius' is the area of search results in meters (approx 50km between North Vancouver and Canada-US Border so this is sufficient), 'key' is the API key that allows for access to the Google Places API
+          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(searchLocation)}&components=country:ca&location=${location}&radius=50000&key=${apiKey}`,
+        );
+        const data = await response.json(); // await response so that the app doesnt crash while the data is loading
+        setAutocompleteSuggestions(data.predictions); // set the autocomplete suggestions to data.predictions, because that is the name which Google structures the JSON object under
+      } catch (error) {
+        console.warn("Autocomplete suggestions retrieval error:", error); // error message
+      }
+    };
+
+    fetchAutocompleteSuggestions(); // call the function
+  }, [searchLocation]); // add a dependency to the useEffect so that it only runs when searchLocation is updated
+
   return (
     <View style={styles.container} pointerEvents="box-none">
       <View style={styles.searchWrapper}>
@@ -252,7 +297,38 @@ export default function App() {
             returnKeyType="search"
             onSubmitEditing={performSearch}
           />
+          <Ionicons
+            name="close"
+            size={18}
+            color="#8A8A8E"
+            style={styles.searchIcon}
+            onPress={clearSearchLocation}
+          />
         </View>
+
+        {autocompleteSuggestions.length > 0 && ( // check if there are autocomplete suggestions to show, if yes then render this container
+          <View style={styles.autocompleteSuggestionsContainer}>
+            {autocompleteSuggestions.map(
+              (
+                suggestion, // use .map() to target each suggestion in the retrieved data array
+              ) => (
+                <TouchableOpacity
+                  key={suggestion.place_id} // use place_id from Google's object data to identify each suggestion result
+                  onPress={() => {
+                    setSearchLocation(suggestion.description); // set the user's search location to the name of the autocomplete result which is stored in 'description'
+                    setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results popup
+                    performSearch(); // go to the destination without needing the user to also click search
+                  }}
+                >
+                  <Text style={styles.suggestionText}>
+                    {/* the name of the autocomplete suggestion */}
+                    {suggestion.description}
+                  </Text>
+                </TouchableOpacity>
+              ),
+            )}
+          </View>
+        )}
       </View>
 
       <MapView
@@ -318,6 +394,13 @@ export default function App() {
           <Text>meters</Text>
         </View>
       </View>
+
+      <TouchableOpacity
+        style={styles.resetRotationButton}
+        onPress={resetMapRotation}
+      >
+        <Ionicons name={"arrow-up-outline"} size={30} color={"#6a65fb"} />
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.userLocationButton}

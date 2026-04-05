@@ -58,12 +58,37 @@ const styles = StyleSheet.create({
     paddingLeft: 6, // allows room search icon
   },
 
+  autocompleteSuggestionsContainer: {
+    // where the autocomplete search suggestions appear
+    flexDirection: "column",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    position: "absolute",
+    top: 70, // padding so the bar is not in the dynamic island
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+
+  suggestionText: {
+    // the name of each suggestion
+    borderBottomColor: "#000",
+  },
+
   radiusFilterWrapper: {
     position: "absolute",
     top: 140, // padding so the bar is not in the dynamic island
     left: 20,
     // right: 20,
-    zIndex: 1, //Allows the search pill bar to be layered above the map
+    // zIndex: 1, //Allows the search pill bar to be layered above the map
   },
 
   // white pill container holds the search input and icon
@@ -84,12 +109,12 @@ const styles = StyleSheet.create({
 
   filterInput: {
     //text inside the search bar
-    // flex: 1, 
+    // flex: 1,
     fontSize: 15,
     color: "black",
     fontWeight: "400",
     paddingLeft: 6, // allows room search icon
-    paddingRight: 3
+    paddingRight: 3,
   },
 
   // Map Markers - White pill with DARK_PURPLE border
@@ -250,8 +275,22 @@ const styles = StyleSheet.create({
   splashLogo: {
     width: 200,
     height: 200,
-  }, 
-  
+  },
+
+  resetRotationButton: {
+    position: "absolute",
+    bottom: 170,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 1000,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+
   userLocationButton: {
     position: "absolute",
     bottom: 100,
