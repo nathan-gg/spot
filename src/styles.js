@@ -57,6 +57,66 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     paddingLeft: 6, // allows room search icon
   },
+
+  autocompleteSuggestionsContainer: {
+    // where the autocomplete search suggestions appear
+    flexDirection: "column",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    position: "absolute",
+    top: 70, // padding so the bar is not in the dynamic island
+    left: 0,
+    right: 0,
+    zIndex: 2,
+  },
+
+  suggestionText: {
+    // the name of each suggestion
+    borderBottomColor: "#000",
+  },
+
+  radiusFilterWrapper: {
+    position: "absolute",
+    top: 140, // padding so the bar is not in the dynamic island
+    left: 20,
+    // right: 20,
+    // zIndex: 1, //Allows the search pill bar to be layered above the map
+  },
+
+  // white pill container holds the search input and icon
+  filterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 50,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    // width: 270
+    alignSelf: "flex-start",
+  },
+
+  filterInput: {
+    //text inside the search bar
+    // flex: 1,
+    fontSize: 15,
+    color: "black",
+    fontWeight: "400",
+    paddingLeft: 6, // allows room search icon
+    paddingRight: 3,
+  },
+
   // Map Markers - White pill with DARK_PURPLE border
   mapMarker: {
     backgroundColor: WHITE,
@@ -89,11 +149,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingHorizontal: 18,
     paddingTop: 12,
-    paddingBottom: 100, //not behind nav bar
+    paddingBottom: 120, //not behind nav bar
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
+    zIndex: 20,
   },
 
   //little grey handle at the top of the sheet
@@ -111,7 +172,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 2,
+    marginBottom: 8,
   },
 
   spotName: {
@@ -128,17 +189,19 @@ const styles = StyleSheet.create({
     color: GREEN,
   },
 
-  spotAddressRow: {
+  bottomSheetSection2: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 2,
+    // marginBottom: 8,
   },
 
   spotAddress: {
     fontSize: 13,
     color: GRAY_TEXT,
-    marginBottom: 2,
+    marginBottom: 8,
+    maxWidth: 240,
   },
 
   spotDescription: {
@@ -193,15 +256,19 @@ const styles = StyleSheet.create({
   //Save Spot button yet to be styled
 
   closeButton: {
-    marginTop: 10,
+    // marginTop: ,
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
 
   closeButtonText: {
-    color: "#adadce",
-    fontSize: 14,
+    color: "#6e6e6e",
+    fontSize: 20,
     fontWeight: "500",
+    // paddingVertical: 4
   },
 
   //Splash Screen
@@ -215,6 +282,34 @@ const styles = StyleSheet.create({
   splashLogo: {
     width: 200,
     height: 200,
+  },
+
+  resetRotationButton: {
+    position: "absolute",
+    bottom: 170,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 1000,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+  },
+
+  userLocationButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 1000,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
   },
 });
 
@@ -332,6 +427,60 @@ export const signInStyles = StyleSheet.create({
     textAlign: "center",
     color: PURPLE,
     fontSize: 14,
+  },
+});
+
+export const mapPrefStyles = StyleSheet.create({
+  mapPrefContainer: {
+    flex: 1,
+    backgroundColor: WHITE,
+    paddingHorizontal: 28,
+    paddingTop: 80,
+    // alignItems: "center",
+  },
+
+  mapPrefImage: {
+    width: "100%",
+    height: 220,
+    marginTop: 40,
+    marginBottom: 32,
+  },
+
+  mapPrefTitle: {
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#111",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+
+  mapPrefBody: {
+    fontSize: 15,
+    color: "#383838",
+    lineHeight: 22,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+
+  mapPrefHint: {
+    fontSize: 15,
+    color: GRAY_TEXT,
+    marginBottom: 36,
+    textAlign: "center",
+  },
+
+  mapPrefButton: {
+    backgroundColor: PURPLE,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  mapPrefButtonText: {
+    color: WHITE,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
