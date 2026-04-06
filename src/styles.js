@@ -253,15 +253,19 @@ const styles = StyleSheet.create({
   //Save Spot button yet to be styled
 
   closeButton: {
-    marginTop: 10,
+    // marginTop: ,
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
 
   closeButtonText: {
-    color: "#adadce",
-    fontSize: 14,
+    color: "#6e6e6e",
+    fontSize: 20,
     fontWeight: "500",
+    // paddingVertical: 4
   },
 
   //Splash Screen

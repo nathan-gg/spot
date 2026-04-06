@@ -21,7 +21,7 @@ import {
 
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-import { Marker } from "react-native-maps";
+import { Marker, Circle } from "react-native-maps";
 import { getParkingData } from "../data/parkingData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
@@ -43,6 +43,19 @@ import {
 import { db, firebase_auth } from "../firebaseConfig"; // import the initialized Firebase app and authentication module to interact with Firestore and manage user authentication
 
 import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
+import "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  clamp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets"; // use the standalone worklets library
 
 const apiKey = process.env.EXPO_PUBLIC_API_KEY; // store the Google Maps API key in a variable for easy access when initializing the Geocoder and making geocoding requests
 
@@ -61,6 +74,54 @@ export default function App() {
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
   const [isSpotSaved, setIsSpotSaved] = useState(false);
+
+  // for gestures
+  const translateY = useSharedValue(0);
+  const context = useSharedValue({ x: 0, y: 0 }); // initial value (0,0)
+
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      // gesture begins:
+      // we capture the current position and save it into our context variable (memory)
+      // Without this, the box would 'snap' back to 0,0 every time you touch it.
+
+      //translateX.value, translateY.value are the current coordinates of strating point
+
+      context.value = { y: translateY.value };
+    })
+    .onUpdate((event) => {
+      // gesture continues:
+      // we add the finger's movement (translationX/Y) to our starting position
+      // this runs on the UI Thread for 60fps smoothness.
+
+      //event.translationX, event.translationY: This represents how far the finger has moved since the touch started
+
+      translateY.value = clamp(context.value.y + event.translationY, 0, 400);
+    })
+    .onEnd(() => {
+      // gesture ends:
+      // withSpring provides a physics-based animation to return the box
+      // to the center (0,0) instead of it just jumping back
+
+      if (translateY.value > 250) {
+        scheduleOnRN(closeSheet);
+      }
+      translateY.value = withSpring(5);
+      // no spring
+      // translateX.value = 0;
+      // translateY.value = 0;
+    });
+
+  // animated style
+  // the 'bridge' that maps our numerical Shared Values to the
+  // visual transform property of the View.
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  function closeSheet() {
+    setSelectedParkingSpot(null);
+  }
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -378,6 +439,16 @@ export default function App() {
             pinColor="red"
           />
         )}
+
+        {searchCoordinates && Number(filterRadius) > 0 && (
+          <Circle
+            center={searchCoordinates}
+            radius={Number(filterRadius)}
+            strokeColor="#554fff"
+            strokeWidth={2}
+            fillColor="#807cff55"
+          />
+        )}
         {visibleSpots.map((parkingSpot) => (
           <Marker
             key={parkingSpot.id}
@@ -434,74 +505,94 @@ export default function App() {
       </TouchableOpacity>
 
       {selectedParkingSpot && (
-        <View style={styles.bottomSheet} pointerEvents="box-none">
-          {/* Drag handle */}
-          <View style={styles.bottomSheetHandle} />
-          {/* Name + Price row */}
-          <View style={styles.bottomSheetHeader}>
-            <Text style={styles.spotName}>{selectedParkingSpot?.id}</Text>
-            <Text style={styles.spotPrice}>{selectedParkingSpot?.rate}/hr</Text>
-          </View>
-          {/* address/description data coming soon */}
-          <Text style={styles.spotAddress}>
-            {selectedParkingSpot?.address}123 Address St.
-          </Text>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.bottomSheet, animatedStyle]}>
+            {/* Drag handle */}
 
-          {/* Description */}
-          <Text style={styles.spotDescription}>
-            {selectedParkingSpot?.description}Vancouver, BC
-          </Text>
+            <View style={styles.bottomSheetHandle} />
 
-          {/* Save Button */}
-
-          <TouchableOpacity
-            onPress={() => saveParkingSpot(selectedParkingSpot)}
-          >
+            {/* <TouchableOpacity style={styles.closeButton}>
+            <Text
+              style={styles.closeButtonText}
+              onPress={() => setSelectedParkingSpot(null)}
+            >
+              Exit
+            </Text>
             <Ionicons
-              name={isSpotSaved ? "bookmark-outline" : "bookmark"}
-              size={22}
-              color="#6C63FF"
+              onPress={() => setSelectedParkingSpot(null)}
+              name={"close"}
+              size={36}
+              color="#6e6e6e"
             />
-          </TouchableOpacity>
-
-          {/* Star rating — hardcoded at 4 stars for now, swap with real data later */}
-          <View style={styles.starsRow}>
-            {[1, 2, 3, 4].map((i) => (
-              <Text key={i} style={styles.starFilled}>
-                ★
+          </TouchableOpacity> */}
+            {/* Name + Price row */}
+            <View style={styles.bottomSheetHeader}>
+              <Text style={styles.spotName}>Meter {selectedParkingSpot?.id}</Text>
+              <Text style={styles.spotPrice}>
+                {selectedParkingSpot?.rate}/hr
               </Text>
-            ))}
-            <Text style={styles.starEmpty}>★</Text>
-          </View>
+            </View>
+            {/* address/description data coming soon */}
+            <Text style={styles.spotAddress}>
+              {selectedParkingSpot?.address}123 Address St.
+            </Text>
 
-          {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
+            {/* Description
+            <Text style={styles.spotDescription}>
+              {selectedParkingSpot?.description}Vancouver, BC
+            </Text> */}
 
-          {/* Go Here → opens Google Maps or Apple Maps */}
-          <Pressable
-            style={styles.parkButton}
-            onPress={() =>
-              openMapApplication(
-                // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
-                selectedParkingSpot?.latitude,
-                selectedParkingSpot?.longitude,
-              )
-            }
-          >
-            <Text style={styles.parkButtonText}>Go Here</Text>
-          </Pressable>
-          {/* <Button
+            {/* Save Button */}
+
+            <TouchableOpacity
+              onPress={() => saveParkingSpot(selectedParkingSpot)}
+            >
+              <Ionicons
+                name={isSpotSaved ? "bookmark" : "bookmark-outline"}
+                size={22}
+                color="#6C63FF"
+              />
+            </TouchableOpacity>
+
+            {/* Star rating — hardcoded at 4 stars for now, swap with real data later */}
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4].map((i) => (
+                <Text key={i} style={styles.starFilled}>
+                  ★
+                </Text>
+              ))}
+              <Text style={styles.starEmpty}>★</Text>
+            </View>
+
+            {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
+
+            {/* Go Here → opens Google Maps or Apple Maps */}
+            <Pressable
+              style={styles.parkButton}
+              onPress={() =>
+                openMapApplication(
+                  // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
+                  selectedParkingSpot?.latitude,
+                  selectedParkingSpot?.longitude,
+                )
+              }
+            >
+              <Text style={styles.parkButtonText}>Go Here</Text>
+            </Pressable>
+            {/* <Button
             title="Save Spot"
             onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
           /> */}
 
-          {/* Close */}
-          <Pressable
+            {/* Close */}
+            {/* <Pressable
             style={styles.closeButton}
             onPress={() => setSelectedParkingSpot(null)}
           >
             <Text style={styles.closeButtonText}>Close</Text>
-          </Pressable>
-        </View>
+          </Pressable> */}
+          </Animated.View>
+        </GestureDetector>
       )}
     </View>
   );
