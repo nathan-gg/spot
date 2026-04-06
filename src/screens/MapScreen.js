@@ -12,6 +12,7 @@ import {
   Linking,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -75,7 +76,14 @@ export default function App() {
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
   const [isSpotSaved, setIsSpotSaved] = useState(false); // stores a boolean value to know if a spot has already been saved by the user
   const [addressStore, setAddressStore] = useState({}); // stores address objects that hold values for different spots, essentially a cache to prevent fetching the same address multiple times in the same session
-
+const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  const [spotAverageRating, setSpotAverageRating] = useState(0); // average star rating for selected spot
+  const [reviewCount, setReviewCount] = useState(0); // total number of ratings for selected spot
+  const [spotReviews, setSpotReviews] = useState([]); // all ratings for selected spot
+  const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
+  const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
+  const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
+  
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
   const context = useSharedValue({ x: 0, y: 0 }); // initial value (0,0), where the bottomSheet starts
@@ -106,6 +114,7 @@ export default function App() {
     // function that is called to close the bottomSheet by clearing the selectedParkingSpot variable
     setSelectedParkingSpot(null);
   }
+  
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -220,7 +229,6 @@ export default function App() {
     })();
   }, []);
 
-  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null); // state to track which parking spot marker has been selected by the user, used to display the bottom sheet with details about the selected parking spot
   // const [modalVisible, setModalVisible] = useState(false);
 
   async function handleMarkerPress(spot) {
@@ -234,6 +242,9 @@ export default function App() {
       ...spot,
       address,
     });
+    console.log("Marker pressed: ", spot);
+    setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
+    fetchAverageRating(spot.id); //average rating when spot is selected
   }
 
   // when looking for info from Firestore, it may take time to get over google, so Firestore sends a "promise" while the answer loads
@@ -334,6 +345,53 @@ export default function App() {
       mapRef.current?.animateCamera({ heading: 0 });
     } catch (error) {
       console.warn("Error: ", error);
+    }
+  }
+
+  //gets all ratings for that specific spot then calculates average
+  async function fetchAverageRating(spotId) {
+    try {
+      const q = query(
+        collection(db, "reviews"),
+        where("spotId", "==", String(spotId)),
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        setSpotAverageRating(0);
+        setReviewCount(0);
+        setSpotReviews([]);
+        return;
+      }
+      const reviews = snapshot.docs.map((doc) => doc.data());
+      const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+      setSpotAverageRating(Math.round(total / reviews.length)); //rounds it whole num
+      setReviewCount(reviews.length);
+      setSpotReviews(reviews);
+    } catch (e) {
+      console.error("Error fetching ratings", e);
+    }
+  }
+
+  //review submission function sent to Firestore
+  async function submitReview() {
+    if (reviewRating === 0) {
+      Alert.alert("Please select a star rating before submitting.");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reviews"), {
+        spotId: String(selectedParkingSpot.id),
+        userId: firebase_auth.currentUser.uid,
+        rating: reviewRating,
+        dateSaved: new Date(),
+      });
+      // Alert.alert("Rating submitted!");
+      setReviewRating(0);
+      setShowReviewModal(false);
+      fetchAverageRating(selectedParkingSpot.id);
+    } catch (e) {
+      console.error("Error submitting rating:", e);
+      Alert.alert("Something went wrong. Please try again.");
     }
   }
 
@@ -576,15 +634,56 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            {/* Star rating — hardcoded at 4 stars for now, swap with real data later */}
-            {/* <View style={styles.starsRow}>
-              {[1, 2, 3, 4].map((i) => (
-                <Text key={i} style={styles.starFilled}>
+            {/* Averaged Star rating + count */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 6,
+            }}
+          >
+            <View style={styles.starsRow}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Text
+                  key={i}
+                  style={
+                    i <= spotAverageRating
+                      ? styles.starFilled
+                      : styles.starEmpty
+                  }
+                >
                   ★
                 </Text>
               ))}
-              <Text style={styles.starEmpty}>★</Text>
-            </View> */}
+            </View>
+            <Text style={{ color: "#7d7d7d", fontSize: 13, marginLeft: 6 }}>
+              ({reviewCount} {reviewCount === 1 ? "rating" : "ratings"})
+            </Text>
+          </View>
+
+          {/* See all rating button */}
+          {reviewCount > 0 && (
+            <TouchableOpacity
+              style={{ marginBottom: 10 }}
+              onPress={() => setShowReviewsModal(true)}
+            >
+              <Text
+                style={{ color: "#807cff", fontSize: 13, fontWeight: "500" }}
+              >
+                See all ratings →
+              </Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Rate this spot button */}
+          <TouchableOpacity
+            style={{ alignItems: "center", marginBottom: 8 }}
+            onPress={() => setShowReviewModal(true)}
+          >
+            <Text style={{ color: "#807cff", fontSize: 14, fontWeight: "500" }}>
+              Rate this Spot ★
+            </Text>
+          </TouchableOpacity>
 
             {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
 
@@ -616,6 +715,148 @@ export default function App() {
           </Animated.View>
         </GestureDetector>
       )}
+
+      {/* ── Rate this Spot Modal ── */}
+      <Modal
+        visible={showReviewModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReviewModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 24,
+              paddingBottom: 40,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 6 }}>
+              Rate this Spot
+            </Text>
+            <Text style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 20 }}>
+              Tap a star to leave your rating
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                marginBottom: 24,
+              }}
+            >
+              {[1, 2, 3, 4, 5].map((i) => (
+                <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
+                  <Text
+                    style={{
+                      fontSize: 48,
+                      color: i <= reviewRating ? "#807cff" : "#ddd",
+                    }}
+                  >
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#807cff",
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+              onPress={submitReview}
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+                Submit
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ alignItems: "center" }}
+              onPress={() => {
+                setReviewRating(0);
+                setShowReviewModal(false);
+              }}
+            >
+              <Text style={{ color: "#aaa", fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── See All Ratings Modal ── */}
+      <Modal
+        visible={showReviewsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReviewsModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 24,
+              maxHeight: "60%",
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 4 }}>
+              All Ratings
+            </Text>
+            <Text style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 16 }}>
+              {reviewCount} {reviewCount === 1 ? "rating" : "ratings"} ·{" "}
+              {spotAverageRating} ★ Avg
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {spotReviews.map((review, index) => (
+                <View
+                  key={index}
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#f0f0f0",
+                    paddingVertical: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: "row" }}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Text
+                        key={i}
+                        style={{
+                          color: i <= review.rating ? "#807cff" : "#ddd",
+                          fontSize: 20,
+                        }}
+                      >
+                        ★
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={{ alignItems: "center", paddingTop: 16 }}
+              onPress={() => setShowReviewsModal(false)}
+            >
+              <Text style={{ color: "#aaa", fontSize: 14 }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
