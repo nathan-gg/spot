@@ -21,6 +21,7 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import MapScreen from "./src/screens/MapScreen";
 import SavedScreen from "./src/screens/SavedScreen.js";
 import HomeScreen from "./src/screens/HomeScreen.js";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 //navigators
 const Stack = createNativeStackNavigator();
@@ -113,7 +114,7 @@ export default function App() {
 
   useEffect(() => {
     async function checkMapPreference() {
-      // await AsyncStorage.clear(); // TEMP - remove when done testing***********!!!!!!
+      await AsyncStorage.clear(); // TEMP - remove when done testing*****THIS CLEARS MAP PREFERENC******!!!!!!
       const preference = await AsyncStorage.getItem("mapPreference");
       setMapPreference(preference);
     }
@@ -156,33 +157,35 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {/* <Stack.Navigator initialRouteName="SignIn"></Stack.Navigator> */}
-      <Stack.Navigator>
-        {user ? (
-          // IF LOGGED IN: render the Protected Layout.
-          // we hide the header here because the ProtectedLayout has its own headers.
-          <Stack.Screen
-            name="ProtectedArea"
-            component={ProtectedLayout}
-            options={{ headerShown: false }}
-          />
-        ) : (
-          // IF NOT LOGGED IN: render the Sign In Screen.
-          <Stack.Screen
-            name="SignIn"
-            component={SignInScreen}
-            options={{ headerShown: false }}
-          />
-          // <Stack.Screen
-          //   name="ProtectedArea"
-          //   component={ProtectedLayout}
-          //   options={{ headerShown: false }}
-          // />
-          // <Stack.Screen name="MapPreference" component={MapPreferenceScreen} />
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        {/* <Stack.Navigator initialRouteName="SignIn"></Stack.Navigator> */}
+        <Stack.Navigator>
+          {user ? (
+            // IF LOGGED IN: render the Protected Layout.
+            // we hide the header here because the ProtectedLayout has its own headers.
+            <Stack.Screen
+              name="ProtectedArea"
+              component={ProtectedLayout}
+              options={{ headerShown: false }}
+            />
+          ) : (
+            // IF NOT LOGGED IN: render the Sign In Screen.
+            <Stack.Screen
+              name="SignIn"
+              component={SignInScreen}
+              options={{ headerShown: false }}
+            />
+            // <Stack.Screen
+            //   name="ProtectedArea"
+            //   component={ProtectedLayout}
+            //   options={{ headerShown: false }}
+            // />
+            // <Stack.Screen name="MapPreference" component={MapPreferenceScreen} />
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }
 

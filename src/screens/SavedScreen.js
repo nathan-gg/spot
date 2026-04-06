@@ -1,5 +1,5 @@
-// UI components and Linking from React Native
-import { View, Text, FlatList, Button, Linking, Alert } from "react-native";
+import { Alert, FlatList, Linking, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   collection,
   getDocs,
@@ -8,145 +8,229 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import { useState, useEffect } from "react";
-// get the instance of the Firestore database so that we can interact with the data for showing the list and removing saved spots
+import { useState, useCallback } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import { db, firebase_auth } from "../firebaseConfig";
-// access the device storage using AsyncStorage to get the user's map preference to check before linking to the external map app
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import useFocusEffect so that the list will refresh every time the page is re-opened after saving spots in MapScreen.js
 import { useFocusEffect } from "@react-navigation/native";
-// necessary for useFocusEffect
-import { useCallback } from "react";
+import { savedStyles as styles } from "../styles";
+
+// formats the rate value for display (e.g. "3.5" → "$3.50/hr")
+function formatRate(rate) {
+  if (!rate) return "Rate unavailable";
+  const num = parseFloat(rate);
+  if (isNaN(num)) return `${rate}`;
+  return `$${num.toFixed(2)}/hr`;
+}
+
+// formats a meter time limit value for display
+function formatTimeLimit(timeLimit) {
+  if (!timeLimit) return "Hours unavailable";
+  return `Mon–Fri 9AM–6PM · ${timeLimit} limit`;
+}
+
+// formats the meter ID into a readable spot name
+function formatSpotName(id) {
+  if (!id) return "Parking Spot";
+  return `Meter #${id}`;
+}
+
+// moves an item in an array from one index to another without mutating the original
+function moveItem(arr, fromIndex, toIndex) {
+  const updated = [...arr];
+  const [moved] = updated.splice(fromIndex, 1);
+  updated.splice(toIndex, 0, moved);
+  return updated;
+}
 
 export default function SavedScreen() {
-  // stores the saved parking spots of the user
   const [savedSpots, setSavedSpots] = useState([]);
-  const [selectedSpot, setSelectedSpot] = useState(null);
+  const [editMode, setEditMode] = useState(false);
 
-  // useFocusEffect here instead of useEffect because it needs to run everytime user navigates to SavedScreen.js
+  // refresh list every time the tab is focused; exit edit mode on navigate away
   useFocusEffect(
     useCallback(() => {
-      // call get parking spots to update the list when the page is focused again
       getSavedParkingSpots();
+      setEditMode(false);
     }, []),
   );
 
-  // an async function to get the user's saved parking spots
   async function getSavedParkingSpots() {
     try {
-      // accesses the savedParkingSpots collection from the Firestore database we made, then checks to get only the documents which have a matching userId value to the current user
       const q = query(
         collection(db, "savedParkingSpots"),
         where("userId", "==", firebase_auth.currentUser.uid),
       );
-      // get the snapshot of all the matching documents
       const querySnapshot = await getDocs(q);
-      // create an array for the results
-      let spots = [];
-
-      querySnapshot.forEach((doc) => {
-        // for each document, log the document id and meter id so that we can see if there are any repeat values while debugging
-        console.log("doc.id:", doc.id, "meter id:", doc.data().id);
-        // store the unique Firestore document id
-        spots.push({ firestoreId: doc.id, ...doc.data() });
+      const spots = [];
+      querySnapshot.forEach((d) => {
+        spots.push({ firestoreId: d.id, ...d.data() });
       });
-      // for checking how many saved spots were retrieved for the users account
-      console.log("Fetched spots:", spots.length);
-      // set the saved spots to the retrieved amount of spots to update the list
       setSavedSpots(spots);
     } catch (error) {
-      // catch any errors
       console.error("Error fetching saved spots: ", error);
     }
   }
 
-  // for "unsaving" or removing a saved parking spot from the users account
+  // delete a spot from Firestore, filter it out of local state, then alert the user
   async function removeSavedParkingSpot(spotId) {
-    console.log("attempting to delete spotId:", spotId);
     try {
-      // use deleteDec to directly delete the document from Firestore
       await deleteDoc(doc(db, "savedParkingSpots", spotId));
-      // update the local state to remove the saved parking spot
-      setSavedSpots(savedSpots.filter((spot) => spot.firestoreId !== spotId));
-      // send an alert to the user so they know the removal is done
-      Alert.alert("Spot removed!");
+      setSavedSpots((prev) =>
+        prev.filter((spot) => spot.firestoreId !== spotId),
+      );
+      Alert.alert("Saved Spot Removed!");
     } catch (error) {
-      // catch any errors
       console.error("Error removing spot: ", error);
     }
   }
 
-  // this is for determining which app should be open based on the user preferences stored in AsyncStorage
+  // move a spot up or down in the list by one position
+  function reorderSpot(index, direction) {
+    const toIndex = direction === "up" ? index - 1 : index + 1;
+    if (toIndex < 0 || toIndex >= savedSpots.length) return;
+    setSavedSpots((prev) => moveItem(prev, index, toIndex));
+  }
+
+  // open the user's preferred map app with directions to the spot
   async function openMapApplication(latitude, longitude) {
-    // check the device storage and use getItem() to get the mapPreference value of either google-maps-preference or apple-maps-preference
     const preference = await AsyncStorage.getItem("mapPreference");
-    // user prefers google maps
     if (preference === "google-maps-preference") {
-      // set url to google maps external link format
       const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
-      // create canOpenURL as a boolean the checks if the user has the destination app (ex. Google Maps) downloaded
       const canOpenURL = await Linking.canOpenURL(url);
-      // if Google Maps is downloaded, open in the app
       if (canOpenURL) {
         Linking.openURL(url);
       } else {
-        // otherwise open on the website
         Linking.openURL(
           `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
         );
       }
     } else if (preference === "apple-maps-preference") {
-      // repeat the process, but if the user has Apple Maps as their preference
       const url = `maps://?daddr=${latitude},${longitude}`;
       const canOpenURL = await Linking.canOpenURL(url);
       if (canOpenURL) {
         Linking.openURL(url);
       } else {
-        // fallback if Apple Maps not available (e.g. Android)
         Linking.openURL(
           `https://maps.apple.com/?daddr=${latitude},${longitude}`,
         );
       }
     } else {
-      // if somehow neither Google Maps nor Apple Maps are selected just open a regular google link
       Linking.openURL(
         `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`,
       );
     }
   }
 
+  function renderSpotCard({ item, index }) {
+    const isFirst = index === 0;
+    const isLast = index === savedSpots.length - 1;
+
+    return (
+      <View style={styles.card}>
+        {/* Image area with purple background and spot name */}
+        <View style={styles.cardImageArea}>
+          <View style={styles.cardImageOverlay} />
+          <Text style={styles.cardSpotName}>{formatSpotName(item.id)}</Text>
+
+          {editMode && (
+            <>
+              {/* ↑ ↓ reorder buttons — left side of image area */}
+              <View style={styles.reorderButtons}>
+                <TouchableOpacity
+                  style={[styles.reorderBtn, isFirst && styles.reorderBtnDisabled]}
+                  onPress={() => reorderSpot(index, "up")}
+                  disabled={isFirst}
+                >
+                  <Ionicons name="chevron-up" size={18} color="#fff" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.reorderBtn, isLast && styles.reorderBtnDisabled]}
+                  onPress={() => reorderSpot(index, "down")}
+                  disabled={isLast}
+                >
+                  <Ionicons name="chevron-down" size={18} color="#fff" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Red trash delete button — top-right */}
+              <TouchableOpacity
+                style={styles.deleteButton}
+                onPress={() => removeSavedParkingSpot(item.firestoreId)}
+              >
+                <Ionicons name="trash" size={20} color="#fff" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
+        {/* Card body: info rows + action buttons */}
+        <View style={styles.cardBody}>
+          <View style={styles.infoRow}>
+            <Ionicons name="navigate-outline" size={16} color="#807cff" />
+            <Text style={styles.infoText}>
+              {item.latitude?.toFixed(4)}, {item.longitude?.toFixed(4)}
+            </Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="cash-outline" size={16} color="#807cff" />
+            <Text style={styles.infoText}>{formatRate(item.rate)}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Ionicons name="time-outline" size={16} color="#807cff" />
+            <Text style={styles.infoText}>{formatTimeLimit(item.timeLimit)}</Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.directionsButton}
+            onPress={() => openMapApplication(item.latitude, item.longitude)}
+          >
+            <Text style={styles.directionsButtonText}>Get Directions</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.detailsButton}>
+            <Text style={styles.detailsButtonText}>View All Details</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#ff9ae7" }}>
-      {savedSpots.length === 0 ? (
-        <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    <SafeAreaView style={styles.safeArea}>
+      {/* Header: title + edit/done toggle */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Saved Spots</Text>
+        <TouchableOpacity
+          style={[styles.editButton, editMode && styles.editButtonActive]}
+          onPress={() => setEditMode(!editMode)}
         >
-          <Text>No saved spots yet.</Text>
+          <Ionicons
+            name={editMode ? "checkmark" : "pencil-outline"}
+            size={20}
+            color="#6a65fb"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {savedSpots.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="bookmark-outline" size={48} color="#aaa" />
+          <Text style={styles.emptyText}>No saved spots yet</Text>
+          <Text style={styles.emptySubtext}>
+            Save a spot from the map to see it here
+          </Text>
         </View>
       ) : (
         <FlatList
           data={savedSpots}
           keyExtractor={(item) => item.firestoreId}
-          renderItem={({ item }) => (
-            <View
-              style={{ padding: 15, borderBottomWidth: 1, borderColor: "#ccc" }}
-            >
-              <Text>{item.rate}/hr</Text>
-              <Text>{item.timeLimit}</Text>
-              <Button
-                title="Unsave"
-                onPress={() => removeSavedParkingSpot(item.firestoreId)}
-              />
-              <Button
-                title="Go Here"
-                onPress={() =>
-                  openMapApplication(item.latitude, item.longitude)
-                }
-              />
-            </View>
-          )}
+          renderItem={renderSpotCard}
+          contentContainerStyle={styles.listContent}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }

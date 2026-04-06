@@ -22,7 +22,7 @@ import {
 
 import Geocoder from "react-native-geocoding";
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-import { Marker } from "react-native-maps";
+import { Marker, Circle } from "react-native-maps";
 import { getParkingData } from "../data/parkingData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView, SafeAreaProvider } from "react-native-safe-area-context";
@@ -32,10 +32,31 @@ import { Ionicons } from "@expo/vector-icons"; // icon library for search icon a
 import styles from "../styles"; // import styles from styles.js for consistent design across the app
 // import MapPreferenceScreen from "./MapPreferenceScreen";
 
-import { collection, addDoc, query, where, getDocs } from "firebase/firestore"; // Firestore functions to add documents to the database
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore"; // Firestore functions to add documents to the database
 import { db, firebase_auth } from "../firebaseConfig"; // import the initialized Firebase app and authentication module to interact with Firestore and manage user authentication
 
 import getDistance from "geolib/es/getDistance"; // library to calculate distance between two coordinate points (used for distance filter)
+import "react-native-gesture-handler"; // library for gesture handling (used for the bottomSheet for each parking meter)
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, { // used to handle animation styling for gestures
+  clamp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets"; // use the standalone worklets library
 
 const apiKey = process.env.EXPO_PUBLIC_API_KEY; // store the Google Maps API key in a variable for easy access when initializing the Geocoder and making geocoding requests
 
@@ -48,28 +69,77 @@ export default function App() {
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
-  const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
+  const [searchLocation, setSearchLocation] = useState(""); // stores text from the search input
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); // stores current fetched parking spots
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
-  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  const [isSpotSaved, setIsSpotSaved] = useState(false); // stores a boolean value to know if a spot has already been saved by the user
+  const [addressStore, setAddressStore] = useState({}); // stores address objects that hold values for different spots, essentially a cache to prevent fetching the same address multiple times in the same session
+const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
   const [spotAverageRating, setSpotAverageRating] = useState(0); // average star rating for selected spot
   const [reviewCount, setReviewCount] = useState(0); // total number of ratings for selected spot
   const [spotReviews, setSpotReviews] = useState([]); // all ratings for selected spot
   const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
   const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
   const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
+  
+  // for tracking the location of objects moved by gestures
+  const translateY = useSharedValue(0);
+  const context = useSharedValue({ x: 0, y: 0 }); // initial value (0,0), where the bottomSheet starts
+
+  const pan = Gesture.Pan() // defining the pan gesture for the map bottomSheet
+    .onStart(() => {
+      // gesture begins: we capture the starting position of the bottomSheet y axis and save it into context.value
+      context.value = { y: translateY.value }; //translateY.value is the current coordinates of the starting point
+    })
+    .onUpdate((event) => {
+      // gesture continues: add the finger's Y axis translation to our starting position
+      translateY.value = clamp(context.value.y + event.translationY, 0, 400); // event.translationY: This represents how far the finger has moved since the touch started
+    })
+    .onEnd(() => {
+      // gesture ends: use if-statement to check if the bottomSheet has translated downward at least 250px, if it has then close the bottomSheet
+      if (translateY.value > 150) {
+        scheduleOnRN(closeSheet); // use scheduleOnRN to call the closeSheet function on the React Native JS thread
+      }
+      translateY.value = withSpring(5); // withSpring provides a physics-based animation to return the box to starting position if it is moved upward or less than 250px downward
+    });
+
+  // animated style is the 'bridge' that maps our numerical Shared Values to the visual transform property of the View.
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  function closeSheet() {
+    // function that is called to close the bottomSheet by clearing the selectedParkingSpot variable
+    setSelectedParkingSpot(null);
+  }
+  
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
 
+  // implement debouncing to prevent the Autocomplete API from being called on every keystroke
+  const debounce = (fn) => {
+    // take in the function being debounced
+    let timeoutId; // holds the ID of the current timer
+
+    return (...args) => {
+      // returns a new function that is called everytime debounce is called
+      clearTimeout(timeoutId); // clears the current timer and restarts each time a keystroke occurs
+      timeoutId = setTimeout(() => {
+        fn.apply(this, args); // call performSearch() with the text arguments (what the user inputted in the search bar)
+      }, 500); // time interval before performSearch() is called
+    };
+  };
+
   // convert the text address in 'searchLocation' into coordinates
   // animate the map to that location
-  async function performSearch() {
+  async function performSearch(searchText) {
+    // pass searchText directly to performSearch() to make sure the latest TextInput value is being computed after debouncing occurs
     try {
       // fetch geocoding data from Google
-      const json = await Geocoder.from(searchLocation); // geocoding returns a JSON object with a lot of data, but the important part is the geometry.location object which has the lat and lng coordinates of the searched location
+      const json = await Geocoder.from(searchText); // geocoding returns a JSON object with a lot of data, but the important part is the geometry.location object which has the lat and lng coordinates of the searched location, also reading searchText instead of searchLocation to get the live data
       const location = json.results[0].geometry.location; // extract the lat and lng from the geocoding response to use for fetching parking data and moving map camera
       const lat = location.lat; // extract latitude from geocoding response
       const lng = location.lng; // extract longitude from geocoding response
@@ -95,15 +165,44 @@ export default function App() {
         { center: searchedLocation, zoom: 15 }, // animate the camera to the searched location with a zoom level of 15 for a closer view of the parking spots
         { duration: 2000 }, // set the animation duration to 2000 milliseconds (2 seconds) for a smooth transition to the new location on the map
       );
+
+      setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
     } catch (error) {
       // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
       console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
     }
   }
 
+  const debouncedSearch = useRef(debounce(performSearch)).current; // get a debounced version of performSearch that is also using useRef so that it can persist through re-renders (.current is used to access the latest value from useRef)
+
+  const handleSearchChange = (text) => {
+    // this handles when the search value changes by updating searchLocation for instant searching with the search button, and debouncedSearch to begin the debouncing process with the current search bar value
+    setSearchLocation(text);
+    debouncedSearch(text);
+  };
+
+  async function getSpotAddress(spot) {
+    // function to retrieve the address of a parking spot in readable language for the bottomSheet UI by reverse geocoding the coordinates
+    if (addressStore[spot.id]) {
+      // check if the spot has already been tapped on and the adress has been saved, this will prevent needing to fetch it from the Geocoding API
+      return addressStore[spot.id]; // return fetched address
+    }
+
+    try {
+      const response = await Geocoder.from(spot.latitude, spot.longitude); // if the spot address has not previously been accessed, retrieve it using Geocoder
+      const textAddress = response.results[0].formatted_address; // the address from the Geocoding API is formatted_address
+
+      setAddressStore({ ...addressStore, [spot.id]: textAddress }); // use a spread operator for arrays to add the new address to addressStore so we don't need to fetch next time its clicked
+      // console.log(textAddress);
+      return textAddress; // return the address to be displayed in the bottomSheet
+    } catch (error) {
+      console.warn("Reverse Geocoding Error: ", error); // log the error to the console for debugging purposes
+      return "Address Not Found"; // return a string to notify the user that the data can't be accessed
+    }
+  }
+
   // useEffect hook: Runs once on mount to request location permissions
   // and fetch the user's current physical position.
-
   useEffect(() => {
     (async () => {
       // request permission to access device location
@@ -132,8 +231,17 @@ export default function App() {
 
   // const [modalVisible, setModalVisible] = useState(false);
 
-  function handleMarkerPress(spot) {
+  async function handleMarkerPress(spot) {
     // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
+    // console.log("Marker pressed: ", spot);
+    // setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
+    const address = await getSpotAddress(spot); // calls getSpotAddress when a marker is clicked to retrieve or fetch the formatted address name
+
+    setSelectedParkingSpot({
+      // set selectedParkingSpot to store the spot, and add the formatted address to the object using a spread operator
+      ...spot,
+      address,
+    });
     console.log("Marker pressed: ", spot);
     setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
     fetchAverageRating(spot.id); //average rating when spot is selected
@@ -143,20 +251,37 @@ export default function App() {
   // using an async function with await makes it so the function is able to pause until the answer is retrieved, rather than breaking
   async function saveParkingSpot(parkingSpot) {
     try {
-      // add a new "document" to the Firestore collection (database) based on whats currently in the form when a parking spot is saved, then Firestore auto generates an id
-      const docRef = await addDoc(collection(db, "savedParkingSpots"), {
-        userId: firebase_auth.currentUser.uid, // associate the saved parking spot with the currently authenticated user by storing their unique user ID from Firebase Authentication, allowing us to later query and display only the parking spots that a specific user has saved
-        id: parkingSpot.id, // store the id of the parking spot from the parkingData.js file to identify which spot was saved
-        type: parkingSpot.type, // store the type of parking spot (e.g., "Metered", "Free", "Garage") from the parkingData.js file to display in the user's saved spots list and details
-        latitude: parkingSpot.latitude, // store the latitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
-        longitude: parkingSpot.longitude, // store the longitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
-        rate: parkingSpot.rate, // store the hourly rate of the parking spot from the parkingData.js file to display in the user's saved spots list and details
-        timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
-        dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
-      });
-      // should log the id and clear form, but clearing not working?, then shows a native success popup
-      console.log("Document written with ID: ", docRef.id);
-      Alert.alert(`Spot Saved!`);
+      const q = query(
+        // create a query to look if the spot has already been saved by the user
+        collection(db, "savedParkingSpots"), // specifying collection
+        where("userId", "==", firebase_auth.currentUser.uid), // filter by the current user using firebase_auth
+        where("id", "==", parkingSpot.id), // filter by the specific spot using the unique parkingSpot.id
+      );
+
+      const querySnapshot = await getDocs(q); // take a snapshot of the query and await the data
+
+      setIsSpotSaved(querySnapshot.empty ? false : true); // use a ternary operator to set the boolean value for isSpotSaved, if the querySnapshot is empty then the spot has not been saved already by the user, and vice versa
+
+      if (querySnapshot.empty) {
+        const docRef = await addDoc(collection(db, "savedParkingSpots"), {
+          userId: firebase_auth.currentUser.uid, // associate the saved parking spot with the currently authenticated user by storing their unique user ID from Firebase Authentication, allowing us to later query and display only the parking spots that a specific user has saved
+          id: parkingSpot.id, // store the id of the parking spot from the parkingData.js file to identify which spot was saved
+          type: parkingSpot.type, // store the type of parking spot (e.g., "Metered", "Free", "Garage") from the parkingData.js file to display in the user's saved spots list and details
+          latitude: parkingSpot.latitude, // store the latitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
+          longitude: parkingSpot.longitude, // store the longitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
+          rate: parkingSpot.rate, // store the hourly rate of the parking spot from the parkingData.js file to display in the user's saved spots list and details
+          timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+          dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
+        });
+        // should log the id and clear form, but clearing not working?, then shows a native success alert
+        console.log("Document written with ID: ", docRef.id);
+        Alert.alert(`Spot Saved!`);
+      } else {
+        // if the spot has already been saved by the user, then when they click on the bookmark the spot should be removed from their saved spots
+        const spotAlreadySaved = querySnapshot.docs[0];
+        await deleteDoc(doc(db, "savedParkingSpots", spotAlreadySaved.id)); // delete the saved spot document from the firebase collection
+        Alert.alert("Spot Removed from Saved");
+      }
     } catch (e) {
       //catch any errors like: no connection to db, no write permissions to db, invalid data, etc
       console.error("Error adding document: ", e);
@@ -198,11 +323,11 @@ export default function App() {
   }
 
   async function goToUserLocation() {
-    console.log(currentLocation);
-
+    // function to move the camera to the user's current location
+    // console.log(currentLocation);
     try {
       // smoothly move the camera to the new coordinates
-      currentLocation &&
+      currentLocation && // use short circuting to check if the user's current location can be accessed, if yes then continue with moving the map camera
         mapRef.current?.animateCamera(
           { center: currentLocation.coords, zoom: 15 },
           { duration: 2000 },
@@ -213,10 +338,10 @@ export default function App() {
   }
 
   async function resetMapRotation() {
+    // function to reset the rotation fo the map camera
     // console.log(currentLocation);
-
     try {
-      // reset the map camera's rotation to North
+      // reset the map camera's rotation to North using the 'heading' parameter
       mapRef.current?.animateCamera({ heading: 0 });
     } catch (error) {
       console.warn("Error: ", error);
@@ -271,6 +396,7 @@ export default function App() {
   }
 
   function clearSearchLocation() {
+    // function to clear search location when the user presses the [X] icon in the search bar
     setSearchLocation("");
   }
 
@@ -345,12 +471,12 @@ export default function App() {
           <TextInput
             // Text input for the user to type in a location they want to search for parking near, which updates the searchLocation state as they type, and when they submit the search (e.g., by pressing the "search" button on the keyboard), it triggers the performSearch function to geocode the address, fetch parking data, and move the map camera to the searched location
             style={styles.input}
-            onChangeText={setSearchLocation}
+            onChangeText={handleSearchChange}
             value={searchLocation}
             placeholder="Find your next destination"
             placeholderTextColor="8A8A8E"
             returnKeyType="search"
-            onSubmitEditing={performSearch}
+            onSubmitEditing={() => performSearch(searchLocation)} // bypass the debouncing process with a direct search using searchLocation
           />
           <Ionicons
             name="close"
@@ -371,8 +497,8 @@ export default function App() {
                   key={suggestion.place_id} // use place_id from Google's object data to identify each suggestion result
                   onPress={() => {
                     setSearchLocation(suggestion.description); // set the user's search location to the name of the autocomplete result which is stored in 'description'
-                    setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results popup
-                    performSearch(); // go to the destination without needing the user to also click search
+
+                    performSearch(suggestion.description); // go to the destination without needing the user to also click search
                   }}
                 >
                   <Text style={styles.suggestionText}>
@@ -407,6 +533,16 @@ export default function App() {
             title="Destination"
             description={searchLocation}
             pinColor="red"
+          />
+        )}
+
+        {searchCoordinates && Number(filterRadius) > 0 && (
+          <Circle
+            center={searchCoordinates}
+            radius={Number(filterRadius)}
+            strokeColor="#554fff"
+            strokeWidth={2}
+            fillColor="#807cff55"
           />
         )}
         {visibleSpots.map((parkingSpot) => (
@@ -465,28 +601,40 @@ export default function App() {
       </TouchableOpacity>
 
       {selectedParkingSpot && (
-        <View style={styles.bottomSheet} pointerEvents="box-none">
-          {/* Drag handle */}
-          <View style={styles.bottomSheetHandle} />
-          {/* Name + Price row */}
-          <View style={styles.bottomSheetHeader}>
-            <Text style={styles.spotName}>{selectedParkingSpot?.id}</Text>
-            <Text style={styles.spotPrice}>{selectedParkingSpot?.rate}/hr</Text>
-          </View>
-          {/* address/description data coming soon */}
-          <Text style={styles.spotAddress}>
-            {selectedParkingSpot?.address}123 Address St.
-          </Text>
+        <GestureDetector gesture={pan}>
+          <Animated.View style={[styles.bottomSheet, animatedStyle]}>
+            {/* Drag handle */}
+            <View style={styles.bottomSheetHandle} />
 
-          {/* Description */}
-          <Text style={styles.spotDescription}>
-            {selectedParkingSpot?.description}Vancouver, BC
-          </Text>
+            {/* Name + Price row */}
+            <View style={styles.bottomSheetHeader}>
+              <Text style={styles.spotName}>
+                Meter #{selectedParkingSpot?.id}
+              </Text>
+              <Text style={styles.spotPrice}>
+                {selectedParkingSpot?.rate}/hr
+              </Text>
+            </View>
 
-          {/* Save Button */}
-          <Ionicons name="bookmark-outline" size={22} color="#6C63FF" />
+            {/* Address and Save Row */}
+            <View style={styles.bottomSheetSection2}>
+              <Text style={styles.spotAddress}>
+                {selectedParkingSpot?.address}
+              </Text>
 
-          {/* Averaged Star rating + count */}
+              {/* Save Button */}
+              <TouchableOpacity
+                onPress={() => saveParkingSpot(selectedParkingSpot)}
+              >
+                <Ionicons
+                  name={isSpotSaved ? "bookmark-outline" : "bookmark"}
+                  size={32}
+                  color="#6C63FF"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Averaged Star rating + count */}
           <View
             style={{
               flexDirection: "row",
@@ -537,34 +685,35 @@ export default function App() {
             </Text>
           </TouchableOpacity>
 
-          {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
+            {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
 
-          {/* Go Here → opens Google Maps or Apple Maps */}
-          <Pressable
-            style={styles.parkButton}
-            onPress={() =>
-              openMapApplication(
-                // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
-                selectedParkingSpot?.latitude,
-                selectedParkingSpot?.longitude,
-              )
-            }
-          >
-            <Text style={styles.parkButtonText}>Go Here</Text>
-          </Pressable>
-          <Button
+            {/* Go Here → opens Google Maps or Apple Maps */}
+            <Pressable
+              style={styles.parkButton}
+              onPress={() =>
+                openMapApplication(
+                  // when the "Go Here" button is pressed, call the openMapApplication function with the latitude and longitude of the selected parking spot to open the user's preferred map application with directions to that parking spot
+                  selectedParkingSpot?.latitude,
+                  selectedParkingSpot?.longitude,
+                )
+              }
+            >
+              <Text style={styles.parkButtonText}>Go Here</Text>
+            </Pressable>
+            {/* <Button
             title="Save Spot"
             onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
-          />
+          /> */}
 
-          {/* Close */}
-          <Pressable
+            {/* Close */}
+            {/* <Pressable
             style={styles.closeButton}
             onPress={() => setSelectedParkingSpot(null)}
           >
             <Text style={styles.closeButtonText}>Close</Text>
-          </Pressable>
-        </View>
+          </Pressable> */}
+          </Animated.View>
+        </GestureDetector>
       )}
 
       {/* ── Rate this Spot Modal ── */}
