@@ -149,11 +149,12 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingHorizontal: 18,
     paddingTop: 12,
-    paddingBottom: 100, //not behind nav bar
+    paddingBottom: 120, //not behind nav bar
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
+    zIndex: 20,
   },
 
   //little grey handle at the top of the sheet
@@ -171,7 +172,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 2,
+    marginBottom: 8,
   },
 
   spotName: {
@@ -188,17 +189,19 @@ const styles = StyleSheet.create({
     color: GREEN,
   },
 
-  spotAddressRow: {
+  bottomSheetSection2: {
+    flex: 1,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 2,
+    // marginBottom: 8,
   },
 
   spotAddress: {
     fontSize: 13,
     color: GRAY_TEXT,
-    marginBottom: 2,
+    marginBottom: 8,
+    maxWidth: 240,
   },
 
   spotDescription: {
@@ -253,15 +256,19 @@ const styles = StyleSheet.create({
   //Save Spot button yet to be styled
 
   closeButton: {
-    marginTop: 10,
+    // marginTop: ,
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "flex-end",
     alignItems: "center",
-    paddingVertical: 8,
+    paddingVertical: 4,
   },
 
   closeButtonText: {
-    color: "#adadce",
-    fontSize: 14,
+    color: "#6e6e6e",
+    fontSize: 20,
     fontWeight: "500",
+    // paddingVertical: 4
   },
 
   //Splash Screen
