@@ -54,3 +54,4 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
   - Checking if Firebase Document is Empty https://www.reddit.com/r/Firebase/comments/kh7w85/firestore_how_to_1_check_if_query_is_empty_2_get/#:~:text=Comments%20Section,%E2%80%A2%203y%20ago
   - React Native Reanimated: clamp https://docs.swmansion.com/react-native-reanimated/docs/utilities/clamp/
   - React Native Worklets: scheduleOnRN https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnRN/
+  - Mastering Throttle and Debounce Functions in React Native with Javascript https://sugandsingh5566.medium.com/mastering-throttle-and-debounce-functions-in-react-native-with-javascript-a03965240829

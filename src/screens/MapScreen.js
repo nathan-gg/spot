@@ -68,7 +68,7 @@ export default function App() {
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
-  const [searchLocation, setSearchLocation] = useState(null); // stores text from the search input
+  const [searchLocation, setSearchLocation] = useState(""); // stores text from the search input
   const [searchCoordinates, setSearchCoordinates] = useState(null); // store the user's search AFTER it has been changed to coordinates by the Geocoder API so that a marker can be placed on it
   const [parkingSpots, setParkingSpots] = useState([]); // stores current fetched parking spots
   const [filterRadius, setFilterRadius] = useState(""); // stores filter radius input
@@ -91,7 +91,7 @@ export default function App() {
     })
     .onEnd(() => {
       // gesture ends: use if-statement to check if the bottomSheet has translated downward at least 250px, if it has then close the bottomSheet
-      if (translateY.value > 250) {
+      if (translateY.value > 150) {
         scheduleOnRN(closeSheet); // use scheduleOnRN to call the closeSheet function on the React Native JS thread
       }
       translateY.value = withSpring(5); // withSpring provides a physics-based animation to return the box to starting position if it is moved upward or less than 250px downward
@@ -110,12 +110,27 @@ export default function App() {
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
 
+  // implement debouncing to prevent the Autocomplete API from being called on every keystroke
+  const debounce = (fn) => {
+    // take in the function being debounced
+    let timeoutId; // holds the ID of the current timer
+
+    return (...args) => {
+      // returns a new function that is called everytime debounce is called
+      clearTimeout(timeoutId); // clears the current timer and restarts each time a keystroke occurs
+      timeoutId = setTimeout(() => {
+        fn.apply(this, args); // call performSearch() with the text arguments (what the user inputted in the search bar)
+      }, 500); // time interval before performSearch() is called
+    };
+  };
+
   // convert the text address in 'searchLocation' into coordinates
   // animate the map to that location
-  async function performSearch() {
+  async function performSearch(searchText) {
+    // pass searchText directly to performSearch() to make sure the latest TextInput value is being computed after debouncing occurs
     try {
       // fetch geocoding data from Google
-      const json = await Geocoder.from(searchLocation); // geocoding returns a JSON object with a lot of data, but the important part is the geometry.location object which has the lat and lng coordinates of the searched location
+      const json = await Geocoder.from(searchText); // geocoding returns a JSON object with a lot of data, but the important part is the geometry.location object which has the lat and lng coordinates of the searched location, also reading searchText instead of searchLocation to get the live data
       const location = json.results[0].geometry.location; // extract the lat and lng from the geocoding response to use for fetching parking data and moving map camera
       const lat = location.lat; // extract latitude from geocoding response
       const lng = location.lng; // extract longitude from geocoding response
@@ -146,6 +161,14 @@ export default function App() {
       console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
     }
   }
+
+  const debouncedSearch = useRef(debounce(performSearch)).current; // get a debounced version of performSearch that is also using useRef so that it can persist through re-renders (.current is used to access the latest value from useRef)
+
+  const handleSearchChange = (text) => {
+    // this handles when the search value changes by updating searchLocation for instant searching with the search button, and debouncedSearch to begin the debouncing process with the current search bar value
+    setSearchLocation(text);
+    debouncedSearch(text);
+  };
 
   async function getSpotAddress(spot) {
     // function to retrieve the address of a parking spot in readable language for the bottomSheet UI by reverse geocoding the coordinates
@@ -388,12 +411,12 @@ export default function App() {
           <TextInput
             // Text input for the user to type in a location they want to search for parking near, which updates the searchLocation state as they type, and when they submit the search (e.g., by pressing the "search" button on the keyboard), it triggers the performSearch function to geocode the address, fetch parking data, and move the map camera to the searched location
             style={styles.input}
-            onChangeText={setSearchLocation}
+            onChangeText={handleSearchChange}
             value={searchLocation}
             placeholder="Find your next destination"
             placeholderTextColor="8A8A8E"
             returnKeyType="search"
-            onSubmitEditing={performSearch}
+            onSubmitEditing={() => performSearch(searchLocation)} // bypass the debouncing process with a direct search using searchLocation
           />
           <Ionicons
             name="close"
@@ -415,7 +438,7 @@ export default function App() {
                   onPress={() => {
                     setSearchLocation(suggestion.description); // set the user's search location to the name of the autocomplete result which is stored in 'description'
                     setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
-                    performSearch(); // go to the destination without needing the user to also click search
+                    performSearch(suggestion.description); // go to the destination without needing the user to also click search
                   }}
                 >
                   <Text style={styles.suggestionText}>
