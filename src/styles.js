@@ -485,3 +485,370 @@ export const mapPrefStyles = StyleSheet.create({
 });
 
 export default styles;
+
+// Settings Screen 
+const SECTION_LABEL_COLOR = "#6D6D72";
+
+export const settingsStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: GRAY_BG,
+  },
+
+  // Main screen
+  mainContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 120,
+  },
+
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 20,
+  },
+
+  profileCard: {
+    backgroundColor: "#6a65fb",
+    borderRadius: 18,
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 20,
+    marginBottom: 28,
+    gap: 16,
+  },
+
+  avatarCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  avatarText: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "700",
+  },
+
+  profileName: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+
+  profileEmail: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 14,
+    marginTop: 2,
+  },
+
+  sectionLabel: {
+    fontSize: 13,
+    color: SECTION_LABEL_COLOR,
+    marginBottom: 6,
+    marginLeft: 4,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    marginBottom: 20,
+    overflow: "hidden",
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+
+  rowBorderBottom: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E5EA",
+  },
+
+  rowIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "rgba(106,101,251,0.1)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+
+  rowText: {
+    flex: 1,
+  },
+
+  rowTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+
+  rowSubtitle: {
+    fontSize: 13,
+    color: GRAY_TEXT,
+    marginTop: 1,
+  },
+
+  // Sub-screens (Personal Info & Security)
+  subHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E5EA",
+    backgroundColor: GRAY_BG,
+  },
+
+  backButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: 90,
+  },
+
+  backText: {
+    color: "#6a65fb",
+    fontSize: 16,
+  },
+
+  subHeaderTitle: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#000",
+  },
+
+  subContent: {
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 60,
+  },
+
+  fieldInput: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: "#000",
+  },
+
+  fieldInputBorderBottom: {
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#E5E5EA",
+  },
+
+  helperText: {
+    fontSize: 12,
+    color: GRAY_TEXT,
+    marginBottom: 6,
+    marginLeft: 4,
+  },
+
+  saveButton: {
+    backgroundColor: "#6a65fb",
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: "center",
+    marginTop: 8,
+    shadowColor: "#6a65fb",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+  },
+
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});
+
+// Saved Screen 
+
+export const savedStyles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#EEEEFF",
+  },
+
+  // Header 
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#000",
+  },
+
+  editButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+
+  editButtonActive: {
+    backgroundColor: "#EAE9FF",
+  },
+
+  // List 
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 120,
+    gap: 16,
+  },
+
+  // Spot Card 
+  card: {
+    backgroundColor: WHITE,
+    borderRadius: 18,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+
+  // top coloured image-area (no real image, use a purple gradient stand-in)
+  cardImageArea: {
+    height: 150,
+    backgroundColor: "#3B3880",
+    justifyContent: "flex-end",
+    padding: 14,
+  },
+
+  cardImageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.25)",
+  },
+
+  cardSpotName: {
+    color: WHITE,
+    fontSize: 22,
+    fontWeight: "700",
+  },
+
+  // ↑ ↓ reorder button column — left side of image area (edit mode only)
+  reorderButtons: {
+    position: "absolute",
+    left: 10,
+    top: 10,
+    gap: 4,
+  },
+
+  reorderBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: "rgba(0,0,0,0.40)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  reorderBtnDisabled: {
+    opacity: 0.3,
+  },
+
+  // red delete badge in top-right corner (edit mode only)
+  deleteButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "#E53935",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  // Card body 
+  cardBody: {
+    padding: 14,
+    gap: 6,
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  infoText: {
+    fontSize: 14,
+    color: GRAY_TEXT,
+    flex: 1,
+  },
+
+  // Buttons
+  directionsButton: {
+    backgroundColor: PURPLE,
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+    marginTop: 10,
+  },
+
+  directionsButtonText: {
+    color: WHITE,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  detailsButton: {
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: PURPLE,
+    paddingVertical: 11,
+    alignItems: "center",
+    marginTop: 8,
+  },
+
+  detailsButtonText: {
+    color: PURPLE,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  // Empty state 
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+
+  emptyText: {
+    fontSize: 17,
+    fontWeight: "600",
+    color: "#555",
+  },
+
+  emptySubtext: {
+    fontSize: 14,
+    color: GRAY_TEXT,
+  },
+});

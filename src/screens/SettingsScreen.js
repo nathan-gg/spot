@@ -1,196 +1,326 @@
-import { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  Button,
   Alert,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  addDoc,
-  doc,
-} from "firebase/firestore";
-import { db, firebase_auth } from "../firebaseConfig";
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updateEmail,
+  updatePassword,
+  updateProfile,
+} from "firebase/auth";
+import { firebase_auth } from "../firebaseConfig";
+import { settingsStyles as styles } from "../styles";
 
-// Options for map and vehicle selections
-const MAP_OPTIONS = [
-  { label: "Google Maps", value: "google-maps-preference" },
-  { label: "Apple Maps", value: "apple-maps-preference" },
-];
-const VEHICLE_OPTIONS = ["SUV", "SEDAN", "PICK-UP", "VAN"];
+// Helper function to get user initials for avatar
 
-export default function SettingsScreen() {
-  const [mapPreference, setMapPreference] = useState(null); // which map is selected
-  const [vehicleType, setVehicleType] = useState(null); // which vehicle is selected
-  const [loading, setLoading] = useState(true); // shows spinner on first load
-  const [saving, setSaving] = useState(false); // shows spinner when saving vehicle
-  const [userPrefDocId, setUserPrefDocId] = useState(null); // stores the Firestore doc ID so we can update it later
-
-  const uid = firebase_auth.currentUser?.uid; // get the current logged-in user's ID
-
-  // Runs once when the screen loads — fetches saved preferences
-  useEffect(() => {
-    async function loadPreferences() {
-      try {
-        // MAP: stored locally on the device with AsyncStorage
-        const storedMap = await AsyncStorage.getItem("mapPreference");
-        if (storedMap) setMapPreference(storedMap);
-
-        // VEHICLE: stored in Firestore, find the doc where userId matches
-        if (uid) {
-          const q = query(
-            collection(db, "userPreferences"),
-            where("userId", "==", uid),
-          );
-          const snapshot = await getDocs(q); // run the query
-
-          if (!snapshot.empty) {
-            const docSnap = snapshot.docs[0]; // grab the first (and only) result
-            setUserPrefDocId(docSnap.id); // save doc ID for later updates
-            const data = docSnap.data();
-            if (data.defaultVehicle && data.defaultVehicle !== "null") {
-              setVehicleType(data.defaultVehicle); // restore the saved vehicle selection
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error loading preferences:", error);
-      } finally {
-        setLoading(false); // hide the spinner whether it succeeded or failed
-      }
-    }
-
-    loadPreferences();
-  }, [uid]);
-
-  // Called when user taps a map option — saves to device storage only
-  async function handleMapPreferenceChange(value) {
-    try {
-      await AsyncStorage.setItem("mapPreference", value); // save to device
-      setMapPreference(value); // update the UI
-    } catch (error) {
-      Alert.alert("Error", "Could not save map preference.");
-    }
+function getInitials(user) {
+  if (user?.displayName) {
+    const parts = user.displayName.trim().split(" ");
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
+  if (user?.email) return user.email[0].toUpperCase();
+  return "?";
+}
 
-  // Called when user taps a vehicle option — saves to Firestore
-  async function handleVehicleChange(value) {
+// Sub-screen: Personal Info
+
+function PersonalInfoScreen({ onBack }) {
+  const user = firebase_auth.currentUser;
+  const [name, setName] = useState(user?.displayName ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const emailChanged = email !== user?.email;
+
+  async function handleSave() {
+    if (!name.trim()) {
+      Alert.alert("Name required", "Please enter your name.");
+      return;
+    }
     setSaving(true);
     try {
-      if (userPrefDocId) {
-        // Doc already exists — just update the vehicle field
-        await updateDoc(doc(db, "userPreferences", userPrefDocId), {
-          defaultVehicle: value,
-        });
-      } else {
-        // First time — create a new doc for this user
-        const newDoc = await addDoc(collection(db, "userPreferences"), {
-          userId: uid,
-          defaultVehicle: value,
-        });
-        setUserPrefDocId(newDoc.id); // save the new doc ID so future taps update instead of create
+      if (emailChanged) {
+        if (!currentPassword) {
+          Alert.alert(
+            "Password required",
+            "To change your email, please enter your current password.",
+          );
+          setSaving(false);
+          return;
+        }
+        const credential = EmailAuthProvider.credential(
+          user.email,
+          currentPassword,
+        );
+        await reauthenticateWithCredential(user, credential);
+        await updateEmail(user, email);
       }
-      setVehicleType(value); // update the UI
+      if (name !== user.displayName) {
+        await updateProfile(user, { displayName: name });
+      }
+      Alert.alert("Saved", "Your info has been updated.");
+      onBack();
     } catch (error) {
-      Alert.alert("Error", "Could not save vehicle preference.");
+      Alert.alert("Error", error.message);
     } finally {
-      setSaving(false); // hide the saving spinner
+      setSaving(false);
     }
-  }
-
-  // Show a spinner while loading preferences on first open
-  if (loading) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator />
-      </View>
-    );
   }
 
   return (
-    <View style={{ flex: 1, padding: 24, backgroundColor: "#ffe371" }}>
-      {/* MAP PREFERENCE */}
-      <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}>
-        Map Preference
-      </Text>
-      <View style={{ flexDirection: "row", gap: 12, marginBottom: 32 }}>
-        {MAP_OPTIONS.map((option) => (
-          <TouchableOpacity
-            key={option.value}
-            onPress={() => handleMapPreferenceChange(option.value)}
-            style={{
-              flex: 1,
-              padding: 14,
-              borderRadius: 10,
-              borderWidth: 2,
-              alignItems: "center",
-              borderColor: mapPreference === option.value ? "#6a65fb" : "#ccc", // purple if selected
-              backgroundColor:
-                mapPreference === option.value ? "#ede9ff" : "#fff", // light purple if selected
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: "600",
-                color: mapPreference === option.value ? "#6a65fb" : "#333",
-              }}
-            >
-              {option.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.subHeader}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#6a65fb" />
+          <Text style={styles.backText}>Account</Text>
+        </TouchableOpacity>
+        <Text style={styles.subHeaderTitle}>Personal Info</Text>
+        <View style={styles.backButton} />
       </View>
 
-      {/* VEHICLE TYPE */}
-      <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 4 }}>
-        My Vehicle
-      </Text>
-      <Text style={{ fontSize: 13, color: "#888", marginBottom: 12 }}>
-        Select your vehicle type to help filter spots easier
-      </Text>
-      {saving && <ActivityIndicator style={{ marginBottom: 8 }} />}
-      <View
-        style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          gap: 12,
-          marginBottom: 40,
-        }}
-      >
-        {VEHICLE_OPTIONS.map((v) => (
-          <TouchableOpacity
-            key={v}
-            onPress={() => handleVehicleChange(v)}
-            style={{
-              paddingVertical: 12,
-              paddingHorizontal: 20,
-              borderRadius: 10,
-              borderWidth: 2,
-              borderColor: vehicleType === v ? "#6a65fb" : "#ccc", // purple if selected
-              backgroundColor: vehicleType === v ? "#ede9ff" : "#fff", // light purple if selected
-            }}
-          >
-            <Text
-              style={{
-                fontWeight: "600",
-                color: vehicleType === v ? "#6a65fb" : "#333",
-              }}
-            >
-              {v}
+      <ScrollView contentContainerStyle={styles.subContent}>
+        <Text style={styles.sectionLabel}>Name</Text>
+        <View style={styles.card}>
+          <TextInput
+            style={styles.fieldInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Full name"
+            placeholderTextColor="#8E8E93"
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>Email</Text>
+        <View style={styles.card}>
+          <TextInput
+            style={styles.fieldInput}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            placeholderTextColor="#8E8E93"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
+
+        {emailChanged && (
+          <>
+            <Text style={styles.sectionLabel}>Current Password</Text>
+            <Text style={styles.helperText}>
+              Required to confirm email change
             </Text>
-          </TouchableOpacity>
-        ))}
+            <View style={styles.card}>
+              <TextInput
+                style={styles.fieldInput}
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                placeholder="Enter current password"
+                placeholderTextColor="#8E8E93"
+                secureTextEntry
+              />
+            </View>
+          </>
+        )}
+
+        <TouchableOpacity
+          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          onPress={handleSave}
+          disabled={saving}
+        >
+          <Text style={styles.saveButtonText}>
+            {saving ? "Saving…" : "Save Changes"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// Sub-screen: Security 
+
+function SecurityScreen({ onBack }) {
+  const user = firebase_auth.currentUser;
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleChangePassword() {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert("All fields required", "Please fill in every field.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Passwords don't match", "Please check your new password.");
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert("Too short", "Password must be at least 6 characters.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        currentPassword,
+      );
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      Alert.alert("Done", "Your password has been updated.");
+      onBack();
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.subHeader}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color="#6a65fb" />
+          <Text style={styles.backText}>Account</Text>
+        </TouchableOpacity>
+        <Text style={styles.subHeaderTitle}>Security</Text>
+        <View style={styles.backButton} />
       </View>
 
-      {/* SIGN OUT */}
-      <Button onPress={() => firebase_auth.signOut()} title="Sign Out" />
-    </View>
+      <ScrollView contentContainerStyle={styles.subContent}>
+        <Text style={styles.sectionLabel}>Current Password</Text>
+        <View style={styles.card}>
+          <TextInput
+            style={styles.fieldInput}
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder="Current password"
+            placeholderTextColor="#8E8E93"
+            secureTextEntry
+          />
+        </View>
+
+        <Text style={styles.sectionLabel}>New Password</Text>
+        <View style={styles.card}>
+          <TextInput
+            style={[styles.fieldInput, styles.fieldInputBorderBottom]}
+            value={newPassword}
+            onChangeText={setNewPassword}
+            placeholder="New password"
+            placeholderTextColor="#8E8E93"
+            secureTextEntry
+          />
+          <TextInput
+            style={styles.fieldInput}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm new password"
+            placeholderTextColor="#8E8E93"
+            secureTextEntry
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.saveButton, saving && { opacity: 0.6 }]}
+          onPress={handleChangePassword}
+          disabled={saving}
+        >
+          <Text style={styles.saveButtonText}>
+            {saving ? "Saving…" : "Update Password"}
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// Main Settings Screen 
+
+export default function SettingsScreen() {
+  const [view, setView] = useState("main"); // "main" | "personalInfo" | "security"
+  const user = firebase_auth.currentUser;
+
+  if (view === "personalInfo") {
+    return <PersonalInfoScreen onBack={() => setView("main")} />;
+  }
+  if (view === "security") {
+    return <SecurityScreen onBack={() => setView("main")} />;
+  }
+
+  const initials = getInitials(user);
+  const displayName = user?.displayName ?? "User";
+  const email = user?.email ?? "";
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.mainContent}>
+        <Text style={styles.pageTitle}>Your Account</Text>
+
+        {/* Profile card */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{initials}</Text>
+          </View>
+          <View>
+            <Text style={styles.profileName}>{displayName}</Text>
+            <Text style={styles.profileEmail}>{email}</Text>
+          </View>
+        </View>
+
+        {/* Account rows */}
+        <Text style={styles.sectionLabel}>Account</Text>
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={[styles.row, styles.rowBorderBottom]}
+            onPress={() => setView("personalInfo")}
+          >
+            <View style={styles.rowIcon}>
+              <Ionicons name="person-outline" size={20} color="#6a65fb" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowTitle}>Personal Info</Text>
+              <Text style={styles.rowSubtitle}>Name, Email</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => setView("security")}
+          >
+            <View style={styles.rowIcon}>
+              <Ionicons name="lock-closed-outline" size={20} color="#6a65fb" />
+            </View>
+            <View style={styles.rowText}>
+              <Text style={styles.rowTitle}>Security</Text>
+              <Text style={styles.rowSubtitle}>Password</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign Out */}
+        <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.row}
+            onPress={() => firebase_auth.signOut()}
+          >
+            <View style={styles.rowIcon}>
+              <Ionicons name="log-out-outline" size={20} color="#6a65fb" />
+            </View>
+            <Text style={styles.rowTitle}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
