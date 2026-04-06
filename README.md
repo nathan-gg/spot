@@ -42,6 +42,7 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
   - Linking https://reactnative.dev/docs/next/linking
   - useMemo https://react.dev/reference/react/useMemo#usage
   - useCallback https://react.dev/reference/react/useCallback
+  - useRef https://react.dev/reference/react/useRef#usage
 
 - External Research
   - Customize your Auth Dependencies https://firebase.google.com/docs/auth/web/custom-dependencies

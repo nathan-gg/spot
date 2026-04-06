@@ -156,6 +156,8 @@ export default function App() {
         { center: searchedLocation, zoom: 15 }, // animate the camera to the searched location with a zoom level of 15 for a closer view of the parking spots
         { duration: 2000 }, // set the animation duration to 2000 milliseconds (2 seconds) for a smooth transition to the new location on the map
       );
+
+      setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
     } catch (error) {
       // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
       console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
@@ -437,7 +439,7 @@ export default function App() {
                   key={suggestion.place_id} // use place_id from Google's object data to identify each suggestion result
                   onPress={() => {
                     setSearchLocation(suggestion.description); // set the user's search location to the name of the autocomplete result which is stored in 'description'
-                    setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
+
                     performSearch(suggestion.description); // go to the destination without needing the user to also click search
                   }}
                 >
@@ -567,7 +569,7 @@ export default function App() {
                 onPress={() => saveParkingSpot(selectedParkingSpot)}
               >
                 <Ionicons
-                  name={isSpotSaved ? "bookmark" : "bookmark-outline"}
+                  name={isSpotSaved ? "bookmark-outline" : "bookmark"}
                   size={32}
                   color="#6C63FF"
                 />
