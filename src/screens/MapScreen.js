@@ -277,6 +277,7 @@ export default function App() {
           longitude: parkingSpot.longitude, // store the longitude coordinate of the parking spot from the parkingData.js file to display on the map and in details
           rate: parkingSpot.rate, // store the hourly rate of the parking spot from the parkingData.js file to display in the user's saved spots list and details
           timeLimit: parkingSpot.timeLimit, // weekday time limit 9am-6pm
+          address: parkingSpot.address || null, // store the reverse-geocoded address so SavedScreen can display it without re-fetching
           dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
         });
         // should log the id and clear form, but clearing not working?, then shows a native success alert

@@ -169,7 +169,7 @@ export default function SavedScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="navigate-outline" size={16} color="#807cff" />
             <Text style={styles.infoText}>
-              {item.latitude?.toFixed(4)}, {item.longitude?.toFixed(4)}
+              {item.address ?? `${item.latitude?.toFixed(4)}, ${item.longitude?.toFixed(4)}`}
             </Text>
           </View>
 
@@ -190,9 +190,6 @@ export default function SavedScreen() {
             <Text style={styles.directionsButtonText}>Get Directions</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.detailsButton}>
-            <Text style={styles.detailsButtonText}>View All Details</Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
