@@ -90,6 +90,7 @@ export default function SignInScreen() {
           <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
+        {/* implement svg component using react-native-svg */}
         <SpotLogo width={100} height={64} />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
@@ -129,7 +130,7 @@ export default function SignInScreen() {
           <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
-
+        {/* implement svg component using react-native-svg */}
         <SpotLogo width={100} height={64} />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
@@ -185,7 +186,7 @@ export default function SignInScreen() {
         <View style={[styles.progressDot, styles.progressDotActive]} />
         <View style={styles.progressDot} />
       </View>
-
+      {/* implement svg component using react-native-svg */}
       <SpotLogo width={100} height={64} />
       <Text style={styles.tagline}>The smarter way to park.</Text>
 

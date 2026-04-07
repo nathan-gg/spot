@@ -20,7 +20,6 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 // import MapScreen ** FILE NAMES TO BE CHANGED
 import MapScreen from "./src/screens/MapScreen";
 import SavedScreen from "./src/screens/SavedScreen.js";
-import HomeScreen from "./src/screens/HomeScreen.js";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 //navigators
@@ -71,7 +70,7 @@ function MainTabs() {
           left: 0,
           right: 0,
           bottom: 30 /* bottom gap */,
-          
+
           borderRadius: 60,
           height: 60,
           backgroundColor: "rgba(0, 0, 0, 0.65)", // color & transparency
@@ -79,16 +78,11 @@ function MainTabs() {
           shadowOffset: { width: 1, height: 1 },
           shadowOpacity: 0.2,
           shadowRadius: 12,
-          marginHorizontal: 70
+          marginHorizontal: 70,
         },
       })}
     >
-      {/* Tab names are 1 2 3 4 — rename when screens are finalized */}
-      {/* <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ headerShown: false }}
-      /> */}
+      {/* Main App Tabs */}
       <Tab.Screen
         name="Map"
         component={MapScreen}
@@ -178,12 +172,6 @@ export default function App() {
               component={SignInScreen}
               options={{ headerShown: false }}
             />
-            // <Stack.Screen
-            //   name="ProtectedArea"
-            //   component={ProtectedLayout}
-            //   options={{ headerShown: false }}
-            // />
-            // <Stack.Screen name="MapPreference" component={MapPreferenceScreen} />
           )}
         </Stack.Navigator>
       </NavigationContainer>

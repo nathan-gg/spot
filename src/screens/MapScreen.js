@@ -236,12 +236,9 @@ export default function App() {
     })();
   }, []);
 
-  // const [modalVisible, setModalVisible] = useState(false);
-
   async function handleMarkerPress(spot) {
     // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
     // console.log("Marker pressed: ", spot);
-    // setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
     const address = await getSpotAddress(spot); // calls getSpotAddress when a marker is clicked to retrieve or fetch the formatted address name
 
     setSelectedParkingSpot({
@@ -295,15 +292,19 @@ export default function App() {
   }
 
   async function openMapApplication(latitude, longitude) {
-    const preference = await AsyncStorage.getItem("mapPreference");
+    // function to tak the user to their desired parking spot using Google Maps or Apple Maps
+    const preference = await AsyncStorage.getItem("mapPreference"); // get the user's map preference from AsyncStorage
 
     if (preference === "google-maps-preference") {
+      // if mapPreference is Google Maps
+      // create the url to Google Maps with the coordinates of the desired parking spot
       const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
 
-      const canOpenURL = await Linking.canOpenURL(url);
+      const canOpenURL = await Linking.canOpenURL(url); // use await to try opening the URL in the Google Maps App
 
       if (canOpenURL) {
-        Linking.openURL(url);
+        // if canOpenURL is not null
+        Linking.openURL(url); // open the URL in Google Maps
       } else {
         // otherwise open on the website
         Linking.openURL(
@@ -727,18 +728,6 @@ export default function App() {
             >
               <Text style={styles.parkButtonText}>Go Here</Text>
             </Pressable>
-            {/* <Button
-            title="Save Spot"
-            onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
-          /> */}
-
-            {/* Close */}
-            {/* <Pressable
-            style={styles.closeButton}
-            onPress={() => setSelectedParkingSpot(null)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </Pressable> */}
           </Animated.View>
         </GestureDetector>
       )}
