@@ -190,9 +190,6 @@ export default function SavedScreen() {
             <Text style={styles.directionsButtonText}>Get Directions</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.detailsButton}>
-            <Text style={styles.detailsButtonText}>View All Details</Text>
-          </TouchableOpacity>
         </View>
       </View>
     );
