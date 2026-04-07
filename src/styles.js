@@ -296,6 +296,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 0,
+  },
+  resetRotationButtonText: {
+    color: "#6a65fb",
+    fontWeight: 500,
+    paddingHorizontal:10,
+    fontSize: 12
   },
 
   userLocationButton: {
@@ -486,7 +496,7 @@ export const mapPrefStyles = StyleSheet.create({
 
 export default styles;
 
-// Settings Screen 
+// Settings Screen
 const SECTION_LABEL_COLOR = "#6D6D72";
 
 export const settingsStyles = StyleSheet.create({
@@ -673,7 +683,7 @@ export const settingsStyles = StyleSheet.create({
   },
 });
 
-// Saved Screen 
+// Saved Screen
 
 export const savedStyles = StyleSheet.create({
   safeArea: {
@@ -681,7 +691,7 @@ export const savedStyles = StyleSheet.create({
     backgroundColor: "#EEEEFF",
   },
 
-  // Header 
+  // Header
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -714,14 +724,14 @@ export const savedStyles = StyleSheet.create({
     backgroundColor: "#EAE9FF",
   },
 
-  // List 
+  // List
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 120,
     gap: 16,
   },
 
-  // Spot Card 
+  // Spot Card
   card: {
     backgroundColor: WHITE,
     borderRadius: 18,
@@ -785,7 +795,7 @@ export const savedStyles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // Card body 
+  // Card body
   cardBody: {
     padding: 14,
     gap: 6,
@@ -833,7 +843,7 @@ export const savedStyles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Empty state 
+  // Empty state
   emptyContainer: {
     flex: 1,
     alignItems: "center",

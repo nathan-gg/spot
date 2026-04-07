@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Animated, Image, View } from "react-native";
 import styles from "../styles";
+import SpotLogo from "../components/SpotLogo";
 
 // Displays an animated splash screen, then calls onFinish when done.
 export default function SplashAnimation({ onFinish }) {
@@ -34,11 +35,7 @@ export default function SplashAnimation({ onFinish }) {
   return (
     <View style={styles.splashContainer}>
       <Animated.View style={{ opacity, transform: [{ scale }] }}>
-        <Image
-          source={require("../../assets/spotLogo.png")}
-          style={styles.splashLogo}
-          resizeMode="contain"
-        />
+        <SpotLogo width={200} height={200} />
       </Animated.View>
     </View>
   );

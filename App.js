@@ -68,16 +68,18 @@ function MainTabs() {
         // transparent bar
         tabBarStyle: {
           position: "absolute", // floats over screen content
+          left: 0,
+          right: 0,
           bottom: 30 /* bottom gap */,
-          marginRight: 25,
-          marginLeft: 25,
+          
           borderRadius: 60,
           height: 60,
-          backgroundColor: "rgba(0, 0, 0, 0.45)", // color & transparency
+          backgroundColor: "rgba(0, 0, 0, 0.65)", // color & transparency
           shadowColor: "#000000",
           shadowOffset: { width: 1, height: 1 },
           shadowOpacity: 0.2,
           shadowRadius: 12,
+          marginHorizontal: 70
         },
       })}
     >

@@ -76,14 +76,14 @@ export default function App() {
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
   const [isSpotSaved, setIsSpotSaved] = useState(false); // stores a boolean value to know if a spot has already been saved by the user
   const [addressStore, setAddressStore] = useState({}); // stores address objects that hold values for different spots, essentially a cache to prevent fetching the same address multiple times in the same session
-const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
   const [spotAverageRating, setSpotAverageRating] = useState(0); // average star rating for selected spot
   const [reviewCount, setReviewCount] = useState(0); // total number of ratings for selected spot
   const [spotReviews, setSpotReviews] = useState([]); // all ratings for selected spot
   const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
   const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
   const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
-  
+
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
   const context = useSharedValue({ x: 0, y: 0 }); // initial value (0,0), where the bottomSheet starts
@@ -114,7 +114,6 @@ const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
     // function that is called to close the bottomSheet by clearing the selectedParkingSpot variable
     setSelectedParkingSpot(null);
   }
-  
 
   // reference to the MapView component to trigger camera animations
   const mapRef = useRef(null);
@@ -590,7 +589,8 @@ const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
         style={styles.resetRotationButton}
         onPress={resetMapRotation}
       >
-        <Ionicons name={"arrow-up-outline"} size={30} color={"#6a65fb"} />
+        <Text style={styles.resetRotationButtonText}>N</Text>
+        <Ionicons name={"compass-outline"} size={30} color={"#6a65fb"} />
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -635,55 +635,57 @@ const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
             </View>
 
             {/* Averaged Star rating + count */}
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 6,
-            }}
-          >
-            <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <Text
-                  key={i}
-                  style={
-                    i <= spotAverageRating
-                      ? styles.starFilled
-                      : styles.starEmpty
-                  }
-                >
-                  ★
-                </Text>
-              ))}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 6,
+              }}
+            >
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Text
+                    key={i}
+                    style={
+                      i <= spotAverageRating
+                        ? styles.starFilled
+                        : styles.starEmpty
+                    }
+                  >
+                    ★
+                  </Text>
+                ))}
+              </View>
+              <Text style={{ color: "#7d7d7d", fontSize: 13, marginLeft: 6 }}>
+                ({reviewCount} {reviewCount === 1 ? "rating" : "ratings"})
+              </Text>
             </View>
-            <Text style={{ color: "#7d7d7d", fontSize: 13, marginLeft: 6 }}>
-              ({reviewCount} {reviewCount === 1 ? "rating" : "ratings"})
-            </Text>
-          </View>
 
-          {/* See all rating button */}
-          {reviewCount > 0 && (
+            {/* See all rating button */}
+            {reviewCount > 0 && (
+              <TouchableOpacity
+                style={{ marginBottom: 10 }}
+                onPress={() => setShowReviewsModal(true)}
+              >
+                <Text
+                  style={{ color: "#807cff", fontSize: 13, fontWeight: "500" }}
+                >
+                  See all ratings →
+                </Text>
+              </TouchableOpacity>
+            )}
+
+            {/* Rate this spot button */}
             <TouchableOpacity
-              style={{ marginBottom: 10 }}
-              onPress={() => setShowReviewsModal(true)}
+              style={{ alignItems: "center", marginBottom: 8 }}
+              onPress={() => setShowReviewModal(true)}
             >
               <Text
-                style={{ color: "#807cff", fontSize: 13, fontWeight: "500" }}
+                style={{ color: "#807cff", fontSize: 14, fontWeight: "500" }}
               >
-                See all ratings →
+                Rate this Spot ★
               </Text>
             </TouchableOpacity>
-          )}
-
-          {/* Rate this spot button */}
-          <TouchableOpacity
-            style={{ alignItems: "center", marginBottom: 8 }}
-            onPress={() => setShowReviewModal(true)}
-          >
-            <Text style={{ color: "#807cff", fontSize: 14, fontWeight: "500" }}>
-              Rate this Spot ★
-            </Text>
-          </TouchableOpacity>
 
             {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
 
