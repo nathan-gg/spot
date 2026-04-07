@@ -242,7 +242,6 @@ export default function App() {
       address,
     });
     console.log("Marker pressed: ", spot);
-    setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
     fetchAverageRating(spot.id); //average rating when spot is selected
   }
 
@@ -551,12 +550,26 @@ export default function App() {
               latitude: parkingSpot.latitude,
               longitude: parkingSpot.longitude,
             }}
-            title={parkingSpot.type}
-            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            // title={parkingSpot.type}
+            // description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
             onPress={() => handleMarkerPress(parkingSpot)}
           >
-            <View style={styles.mapMarker}>
-              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+            <View
+              style={
+                selectedParkingSpot?.id === parkingSpot.id
+                  ? styles.mapMarkerActive
+                  : styles.mapMarker
+              }
+            >
+              <Text
+                style={
+                  selectedParkingSpot?.id === parkingSpot.id
+                    ? styles.mapMarkerTextActive
+                    : styles.mapMarkerText
+                }
+              >
+                {parkingSpot.rate}/hr
+              </Text>
             </View>
           </Marker>
         ))}

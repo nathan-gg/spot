@@ -131,9 +131,29 @@ const styles = StyleSheet.create({
     shadowRadius: 1.5,
   },
 
+  // Map Markers - White pill with DARK_PURPLE border
+  mapMarkerActive: {
+    backgroundColor: DARK_PURPLE,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: WHITE,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 1.5,
+  },
+
   //text inside the marker
   mapMarkerText: {
     color: DARK_PURPLE,
+    fontWeight: "700", //bold or even heavy
+    fontSize: 14,
+  },
+
+   mapMarkerTextActive: {
+    color: WHITE,
     fontWeight: "700", //bold or even heavy
     fontSize: 14,
   },
