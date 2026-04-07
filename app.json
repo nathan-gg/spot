@@ -27,7 +27,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Spot to access your location to find parking near you."
+        }
+      ]
     ]
   }
 }

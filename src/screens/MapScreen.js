@@ -209,6 +209,10 @@ export default function App() {
 
       if (status !== "granted") {
         // if permission is denied, log a message and exit the function to prevent further attempts to access location data
+        Alert.alert(
+          "Location Permission Denied",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
         console.log("Permission to access location was denied");
         return; // exit the function early since we don't have permission to access location, preventing any errors that would occur from trying to access location data without permission
       }
@@ -223,6 +227,10 @@ export default function App() {
         //   `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         // );
       } else {
+        Alert.alert(
+          "Location Not Found",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
         console.log("Current location not obtained");
       }
     })();
@@ -610,7 +618,11 @@ export default function App() {
         style={styles.userLocationButton}
         onPress={goToUserLocation}
       >
-        <Ionicons name={"locate"} size={30} color={"#6a65fb"} />
+        <Ionicons
+          name={"locate"}
+          size={30}
+          color={currentLocation ? "#6a65fb" : "#7d7d7d"}
+        />
       </TouchableOpacity>
 
       {selectedParkingSpot && (
