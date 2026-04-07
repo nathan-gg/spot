@@ -10,7 +10,6 @@ import {
   Alert,
   Button,
   Keyboard,
-  KeyboardAvoidingView,
   Linking,
   Modal,
   Platform,
@@ -86,7 +85,7 @@ export default function App() {
   const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
   const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
   const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
-  // const [reviewComment, setReviewComment] = useState(""); // To Be Added, Comments for Ratings
+  const [reviewComment, setReviewComment] = useState(""); // To Be Added, Comments for Ratings
 
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
@@ -728,74 +727,101 @@ export default function App() {
         transparent={true}
         onRequestClose={() => setShowReviewModal(false)}
       >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: "flex-end",
-            backgroundColor: "rgba(0,0,0,0.4)",
-          }}
-        >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View
             style={{
-              backgroundColor: "white",
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              padding: 24,
-              paddingBottom: 40,
+              flex: 1,
+              justifyContent: "flex-end",
+              backgroundColor: "rgba(0,0,0,0.4)",
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 6 }}>
-              Rate this Spot
-            </Text>
-            <Text style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 20 }}>
-              Tap a star to leave your rating
-            </Text>
             <View
               style={{
-                flexDirection: "row",
-                justifyContent: "center",
-                marginBottom: 24,
+                backgroundColor: "white",
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: 24,
+                maxHeight: "80%",
               }}
             >
-              {[1, 2, 3, 4, 5].map((i) => (
-                <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
-                  <Text
-                    style={{
-                      fontSize: 48,
-                      color: i <= reviewRating ? "#807cff" : "#ddd",
-                    }}
-                  >
-                    ★
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TouchableOpacity
-              style={{
-                backgroundColor: "#807cff",
-                borderRadius: 10,
-                paddingVertical: 14,
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-              onPress={submitReview}
-            >
-              <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
-                Submit
+              <Text
+                style={{ fontSize: 18, fontWeight: "700", marginBottom: 6 }}
+              >
+                Rate this Spot
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={{ alignItems: "center" }}
-              onPress={() => {
-                setReviewRating(0);
-                setReviewComment("");
-                setShowReviewModal(false);
-              }}
-            >
-              <Text style={{ color: "#aaa", fontSize: 14 }}>Cancel</Text>
-            </TouchableOpacity>
+              <Text
+                style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 20 }}
+              >
+                Tap a star to leave your rating
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  marginBottom: 24,
+                }}
+              >
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
+                    <Text
+                      style={{
+                        fontSize: 48,
+                        color: i <= reviewRating ? "#807cff" : "#ddd",
+                      }}
+                    >
+                      ★
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: "#ddd",
+                  borderRadius: 10,
+                  padding: 12,
+                  fontSize: 14,
+                  marginBottom: 20,
+                  minHeight: 80,
+                  textAlignVertical: "top",
+                }}
+                placeholder="Leave a comment (optional)"
+                placeholderTextColor="#aaa"
+                value={reviewComment}
+                onChangeText={setReviewComment}
+                multiline={true}
+              />
+
+              <TouchableOpacity
+                style={{
+                  backgroundColor: "#807cff",
+                  borderRadius: 10,
+                  paddingVertical: 14,
+                  alignItems: "center",
+                  marginBottom: 10,
+                }}
+                onPress={submitReview}
+              >
+                <Text
+                  style={{ color: "white", fontSize: 16, fontWeight: "600" }}
+                >
+                  Submit
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ alignItems: "center" }}
+                onPress={() => {
+                  setReviewRating(0);
+                  setReviewComment("");
+                  setShowReviewModal(false);
+                }}
+              >
+                <Text style={{ color: "#aaa", fontSize: 14 }}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* ── See All Ratings Modal ── */}
@@ -851,6 +877,11 @@ export default function App() {
                       </Text>
                     ))}
                   </View>
+                  {review.comment ? (
+                    <Text style={{ fontSize: 13, color: "#444", marginTop: 2 }}>
+                      {review.comment}
+                    </Text>
+                  ) : null}
                 </View>
               ))}
             </ScrollView>
