@@ -9,14 +9,18 @@ import React, {
 import {
   Alert,
   Button,
+  Keyboard,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -65,7 +69,6 @@ Geocoder.init(apiKey);
 
 export default function App() {
   // main component for the Map Screen, which displays the map, search functionality, and parking spot details
-  // console.log("This is the apikey", apiKey);
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
@@ -83,6 +86,7 @@ export default function App() {
   const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
   const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
   const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
+  // const [reviewComment, setReviewComment] = useState(""); // To Be Added, Comments for Ratings
 
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
@@ -168,7 +172,7 @@ export default function App() {
       setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
     } catch (error) {
       // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
-      console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
+      // console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
     }
   }
 
@@ -195,7 +199,7 @@ export default function App() {
       // console.log(textAddress);
       return textAddress; // return the address to be displayed in the bottomSheet
     } catch (error) {
-      console.warn("Reverse Geocoding Error: ", error); // log the error to the console for debugging purposes
+      // console.warn("Reverse Geocoding Error: ", error); // log the error to the console for debugging purposes
       return "Address Not Found"; // return a string to notify the user that the data can't be accessed
     }
   }
@@ -223,7 +227,6 @@ export default function App() {
       if (location) {
         // if location data is successfully retrieved, update currentLocation state with the retrieved location data, which includes the latitude and longitude coordinates of the user's current position
         setCurrentLocation(location);
-        // console.log(
         //   `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         // );
       } else {
@@ -277,7 +280,7 @@ export default function App() {
           dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
         });
         // should log the id and clear form, but clearing not working?, then shows a native success alert
-        console.log("Document written with ID: ", docRef.id);
+        // console.log("Document written with ID: ", docRef.id);
         Alert.alert(`Spot Saved!`);
       } else {
         // if the spot has already been saved by the user, then when they click on the bookmark the spot should be removed from their saved spots
@@ -340,7 +343,7 @@ export default function App() {
           { duration: 2000 },
         );
     } catch (error) {
-      console.warn("Error: ", error);
+      // console.warn("Error: ", error);
     }
   }
 
@@ -351,7 +354,7 @@ export default function App() {
       // reset the map camera's rotation to North using the 'heading' parameter
       mapRef.current?.animateCamera({ heading: 0 });
     } catch (error) {
-      console.warn("Error: ", error);
+      // console.warn("Error: ", error);
     }
   }
 
@@ -375,7 +378,7 @@ export default function App() {
       setReviewCount(reviews.length);
       setSpotReviews(reviews);
     } catch (e) {
-      console.error("Error fetching ratings", e);
+      // console.error("Error fetching ratings", e);
     }
   }
 
@@ -390,14 +393,16 @@ export default function App() {
         spotId: String(selectedParkingSpot.id),
         userId: firebase_auth.currentUser.uid,
         rating: reviewRating,
+        comment: reviewComment.trim(),
         dateSaved: new Date(),
       });
       // Alert.alert("Rating submitted!");
       setReviewRating(0);
       setShowReviewModal(false);
+      setShowReviewModal(false);
       fetchAverageRating(selectedParkingSpot.id);
     } catch (e) {
-      console.error("Error submitting rating:", e);
+      // console.error("Error submitting rating:", e);
       Alert.alert("Something went wrong. Please try again.");
     }
   }
@@ -410,7 +415,7 @@ export default function App() {
   const checkDistanceToSpot = useCallback(
     (spot) => {
       // useCallback to only check the distance between the searchCoordinates and parkingSpot if the search destination or filter radius value have changed
-      console.log("recalculating distance for spot:", spot.id); // for testing that each of the 20 spots are being calculated
+      // console.log("recalculating distance for spot:", spot.id); // for testing that each of the 20 spots are being calculated
       return getDistance(
         { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
         {
@@ -456,7 +461,7 @@ export default function App() {
         const data = await response.json(); // await response so that the app doesnt crash while the data is loading
         setAutocompleteSuggestions(data.predictions); // set the autocomplete suggestions to data.predictions, because that is the name which Google structures the JSON object under
       } catch (error) {
-        console.warn("Autocomplete suggestions retrieval error:", error); // error message
+        // console.warn("Autocomplete suggestions retrieval error:", error); // error message
       }
     };
 
@@ -481,7 +486,7 @@ export default function App() {
             onChangeText={handleSearchChange}
             value={searchLocation}
             placeholder="Find your next destination"
-            placeholderTextColor="8A8A8E"
+            placeholderTextColor="#8A8A8E"
             returnKeyType="search"
             onSubmitEditing={() => performSearch(searchLocation)} // bypass the debouncing process with a direct search using searchLocation
           />
@@ -653,7 +658,7 @@ export default function App() {
                 onPress={() => saveParkingSpot(selectedParkingSpot)}
               >
                 <Ionicons
-                  name={isSpotSaved ? "bookmark-outline" : "bookmark"}
+                  name={isSpotSaved ? "bookmark" : "bookmark-outline"}
                   size={32}
                   color="#6C63FF"
                 />
@@ -799,6 +804,7 @@ export default function App() {
               style={{ alignItems: "center" }}
               onPress={() => {
                 setReviewRating(0);
+                setReviewComment("");
                 setShowReviewModal(false);
               }}
             >
