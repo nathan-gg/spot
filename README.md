@@ -19,6 +19,7 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
   - Expo Documentation for react-native-maps https://docs.expo.dev/versions/latest/sdk/map-view/
   - Geolib Library by Manuel Bieh https://www.npmjs.com/package/geolib
   - Ionicons Icon Library by Ionic https://ionic.io/ionicons
+  - react-native-svg by Expo https://docs.expo.dev/versions/latest/sdk/svg/
 
 - IAT 359 Canvas Modules
   - Lecture 4 https://canvas.sfu.ca/courses/9235/files/1764791?module_item_id=559911

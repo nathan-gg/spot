@@ -10,6 +10,8 @@ import { firebase_auth } from "../firebaseConfig";
 
 import { signInStyles as styles } from "../styles";
 
+import SpotLogo from "../components/SpotLogo";
+
 // the main function that is exported and used as a screen within App.js
 export default function SignInScreen() {
   // a variable to check and update the step of the process that user is on
@@ -88,10 +90,8 @@ export default function SignInScreen() {
           <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
-        <Image
-          source={require("../../assets/spotLogo.png")}
-          style={styles.logo}
-        />
+        {/* implement svg component using react-native-svg */}
+        <SpotLogo width={100} height={64} />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
         <TextInput
@@ -130,11 +130,8 @@ export default function SignInScreen() {
           <View style={styles.progressDot} />
           <View style={styles.progressDot} />
         </View>
-
-        <Image
-          source={require("../../assets/spotLogo.png")}
-          style={styles.logo}
-        />
+        {/* implement svg component using react-native-svg */}
+        <SpotLogo width={100} height={64} />
         <Text style={styles.tagline}>The smarter way to park.</Text>
 
         <TextInput
@@ -189,11 +186,8 @@ export default function SignInScreen() {
         <View style={[styles.progressDot, styles.progressDotActive]} />
         <View style={styles.progressDot} />
       </View>
-
-      <Image
-        source={require("../../assets/spotLogo.png")}
-        style={styles.logo}
-      />
+      {/* implement svg component using react-native-svg */}
+      <SpotLogo width={100} height={64} />
       <Text style={styles.tagline}>The smarter way to park.</Text>
 
       <TextInput

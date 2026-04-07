@@ -213,7 +213,11 @@ export default function App() {
 
       if (status !== "granted") {
         // if permission is denied, log a message and exit the function to prevent further attempts to access location data
-        // console.log("Permission to access location was denied");
+        Alert.alert(
+          "Location Permission Denied",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
+        console.log("Permission to access location was denied");
         return; // exit the function early since we don't have permission to access location, preventing any errors that would occur from trying to access location data without permission
       }
 
@@ -226,17 +230,18 @@ export default function App() {
         //   `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         // );
       } else {
-        // console.log("Current location not obtained");
+        Alert.alert(
+          "Location Not Found",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
+        console.log("Current location not obtained");
       }
     })();
   }, []);
 
-  // const [modalVisible, setModalVisible] = useState(false);
-
   async function handleMarkerPress(spot) {
     // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
     // console.log("Marker pressed: ", spot);
-    // setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
     const address = await getSpotAddress(spot); // calls getSpotAddress when a marker is clicked to retrieve or fetch the formatted address name
 
     setSelectedParkingSpot({
@@ -244,7 +249,7 @@ export default function App() {
       ...spot,
       address,
     });
-    // console.log("Marker pressed: ", spot);
+    console.log("Marker pressed: ", spot);
     fetchAverageRating(spot.id); //average rating when spot is selected
   }
 
@@ -290,15 +295,19 @@ export default function App() {
   }
 
   async function openMapApplication(latitude, longitude) {
-    const preference = await AsyncStorage.getItem("mapPreference");
+    // function to tak the user to their desired parking spot using Google Maps or Apple Maps
+    const preference = await AsyncStorage.getItem("mapPreference"); // get the user's map preference from AsyncStorage
 
     if (preference === "google-maps-preference") {
+      // if mapPreference is Google Maps
+      // create the url to Google Maps with the coordinates of the desired parking spot
       const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
 
-      const canOpenURL = await Linking.canOpenURL(url);
+      const canOpenURL = await Linking.canOpenURL(url); // use await to try opening the URL in the Google Maps App
 
       if (canOpenURL) {
-        Linking.openURL(url);
+        // if canOpenURL is not null
+        Linking.openURL(url); // open the URL in Google Maps
       } else {
         // otherwise open on the website
         Linking.openURL(
@@ -555,12 +564,26 @@ export default function App() {
               latitude: parkingSpot.latitude,
               longitude: parkingSpot.longitude,
             }}
-            title={parkingSpot.type}
-            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            // title={parkingSpot.type}
+            // description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
             onPress={() => handleMarkerPress(parkingSpot)}
           >
-            <View style={styles.mapMarker}>
-              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+            <View
+              style={
+                selectedParkingSpot?.id === parkingSpot.id
+                  ? styles.mapMarkerActive
+                  : styles.mapMarker
+              }
+            >
+              <Text
+                style={
+                  selectedParkingSpot?.id === parkingSpot.id
+                    ? styles.mapMarkerTextActive
+                    : styles.mapMarkerText
+                }
+              >
+                {parkingSpot.rate}/hr
+              </Text>
             </View>
           </Marker>
         ))}
@@ -593,14 +616,19 @@ export default function App() {
         style={styles.resetRotationButton}
         onPress={resetMapRotation}
       >
-        <Ionicons name={"arrow-up-outline"} size={30} color={"#6a65fb"} />
+        <Text style={styles.resetRotationButtonText}>N</Text>
+        <Ionicons name={"compass-outline"} size={30} color={"#6a65fb"} />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.userLocationButton}
         onPress={goToUserLocation}
       >
-        <Ionicons name={"locate"} size={30} color={"#6a65fb"} />
+        <Ionicons
+          name={"locate"}
+          size={30}
+          color={currentLocation ? "#6a65fb" : "#7d7d7d"}
+        />
       </TouchableOpacity>
 
       {selectedParkingSpot && (
@@ -705,18 +733,6 @@ export default function App() {
             >
               <Text style={styles.parkButtonText}>Go Here</Text>
             </Pressable>
-            {/* <Button
-            title="Save Spot"
-            onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
-          /> */}
-
-            {/* Close */}
-            {/* <Pressable
-            style={styles.closeButton}
-            onPress={() => setSelectedParkingSpot(null)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </Pressable> */}
           </Animated.View>
         </GestureDetector>
       )}
