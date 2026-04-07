@@ -9,13 +9,18 @@ import React, {
 import {
   Alert,
   Button,
+  Keyboard,
+  KeyboardAvoidingView,
   Linking,
   Modal,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 
@@ -64,7 +69,6 @@ Geocoder.init(apiKey);
 
 export default function App() {
   // main component for the Map Screen, which displays the map, search functionality, and parking spot details
-  // console.log("This is the apikey", apiKey);
 
   // state management
   const [currentLocation, setCurrentLocation] = useState(null); // stores user's GPS coords
@@ -75,6 +79,14 @@ export default function App() {
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState([]); // stores autocomplete suggestions
   const [isSpotSaved, setIsSpotSaved] = useState(false); // stores a boolean value to know if a spot has already been saved by the user
   const [addressStore, setAddressStore] = useState({}); // stores address objects that hold values for different spots, essentially a cache to prevent fetching the same address multiple times in the same session
+  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null);
+  const [spotAverageRating, setSpotAverageRating] = useState(0); // average star rating for selected spot
+  const [reviewCount, setReviewCount] = useState(0); // total number of ratings for selected spot
+  const [spotReviews, setSpotReviews] = useState([]); // all ratings for selected spot
+  const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
+  const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
+  const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
+  // const [reviewComment, setReviewComment] = useState(""); // To Be Added, Comments for Ratings
 
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
@@ -160,7 +172,7 @@ export default function App() {
       setAutocompleteSuggestions([]); // clear the suggestions array once a result is clicked to close the results container
     } catch (error) {
       // catch and log any errors that occur during the geocoding process, such as network issues or invalid addresses
-      console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
+      // console.warn("Geocoding Error: ", error); // log the error to the console for debugging purposes
     }
   }
 
@@ -187,7 +199,7 @@ export default function App() {
       // console.log(textAddress);
       return textAddress; // return the address to be displayed in the bottomSheet
     } catch (error) {
-      console.warn("Reverse Geocoding Error: ", error); // log the error to the console for debugging purposes
+      // console.warn("Reverse Geocoding Error: ", error); // log the error to the console for debugging purposes
       return "Address Not Found"; // return a string to notify the user that the data can't be accessed
     }
   }
@@ -201,6 +213,10 @@ export default function App() {
 
       if (status !== "granted") {
         // if permission is denied, log a message and exit the function to prevent further attempts to access location data
+        Alert.alert(
+          "Location Permission Denied",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
         console.log("Permission to access location was denied");
         return; // exit the function early since we don't have permission to access location, preventing any errors that would occur from trying to access location data without permission
       }
@@ -211,22 +227,21 @@ export default function App() {
       if (location) {
         // if location data is successfully retrieved, update currentLocation state with the retrieved location data, which includes the latitude and longitude coordinates of the user's current position
         setCurrentLocation(location);
-        // console.log(
         //   `Current location: lat: ${currentLocation.coords.latitude}, lng: ${currentLocation.coords.longitude}`,
         // );
       } else {
+        Alert.alert(
+          "Location Not Found",
+          "Enable Location Services in System Settings to use GPS features.",
+        );
         console.log("Current location not obtained");
       }
     })();
   }, []);
 
-  const [selectedParkingSpot, setSelectedParkingSpot] = useState(null); // state to track which parking spot marker has been selected by the user, used to display the bottom sheet with details about the selected parking spot
-  // const [modalVisible, setModalVisible] = useState(false);
-
   async function handleMarkerPress(spot) {
     // when a parking spot marker is pressed, log the details of the selected spot and update the selectedParkingSpot state to the pressed spot, which will trigger the bottom sheet to display with the details of that parking spot
     // console.log("Marker pressed: ", spot);
-    // setSelectedParkingSpot(spot); // update state with the selected parking spot, which will trigger the bottom sheet to display with the details of that parking spot
     const address = await getSpotAddress(spot); // calls getSpotAddress when a marker is clicked to retrieve or fetch the formatted address name
 
     setSelectedParkingSpot({
@@ -234,6 +249,8 @@ export default function App() {
       ...spot,
       address,
     });
+    console.log("Marker pressed: ", spot);
+    fetchAverageRating(spot.id); //average rating when spot is selected
   }
 
   // when looking for info from Firestore, it may take time to get over google, so Firestore sends a "promise" while the answer loads
@@ -264,7 +281,7 @@ export default function App() {
           dateSaved: new Date(), // store the date and time when the parking spot was saved to the user's saved spots list, which can be used for sorting and displaying when the spot was saved
         });
         // should log the id and clear form, but clearing not working?, then shows a native success alert
-        console.log("Document written with ID: ", docRef.id);
+        // console.log("Document written with ID: ", docRef.id);
         Alert.alert(`Spot Saved!`);
       } else {
         // if the spot has already been saved by the user, then when they click on the bookmark the spot should be removed from their saved spots
@@ -279,15 +296,19 @@ export default function App() {
   }
 
   async function openMapApplication(latitude, longitude) {
-    const preference = await AsyncStorage.getItem("mapPreference");
+    // function to tak the user to their desired parking spot using Google Maps or Apple Maps
+    const preference = await AsyncStorage.getItem("mapPreference"); // get the user's map preference from AsyncStorage
 
     if (preference === "google-maps-preference") {
+      // if mapPreference is Google Maps
+      // create the url to Google Maps with the coordinates of the desired parking spot
       const url = `comgooglemaps://?daddr=${latitude},${longitude}`;
 
-      const canOpenURL = await Linking.canOpenURL(url);
+      const canOpenURL = await Linking.canOpenURL(url); // use await to try opening the URL in the Google Maps App
 
       if (canOpenURL) {
-        Linking.openURL(url);
+        // if canOpenURL is not null
+        Linking.openURL(url); // open the URL in Google Maps
       } else {
         // otherwise open on the website
         Linking.openURL(
@@ -323,7 +344,7 @@ export default function App() {
           { duration: 2000 },
         );
     } catch (error) {
-      console.warn("Error: ", error);
+      // console.warn("Error: ", error);
     }
   }
 
@@ -334,7 +355,56 @@ export default function App() {
       // reset the map camera's rotation to North using the 'heading' parameter
       mapRef.current?.animateCamera({ heading: 0 });
     } catch (error) {
-      console.warn("Error: ", error);
+      // console.warn("Error: ", error);
+    }
+  }
+
+  //gets all ratings for that specific spot then calculates average
+  async function fetchAverageRating(spotId) {
+    try {
+      const q = query(
+        collection(db, "reviews"),
+        where("spotId", "==", String(spotId)),
+      );
+      const snapshot = await getDocs(q);
+      if (snapshot.empty) {
+        setSpotAverageRating(0);
+        setReviewCount(0);
+        setSpotReviews([]);
+        return;
+      }
+      const reviews = snapshot.docs.map((doc) => doc.data());
+      const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+      setSpotAverageRating(Math.round(total / reviews.length)); //rounds it whole num
+      setReviewCount(reviews.length);
+      setSpotReviews(reviews);
+    } catch (e) {
+      // console.error("Error fetching ratings", e);
+    }
+  }
+
+  //review submission function sent to Firestore
+  async function submitReview() {
+    if (reviewRating === 0) {
+      Alert.alert("Please select a star rating before submitting.");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "reviews"), {
+        spotId: String(selectedParkingSpot.id),
+        userId: firebase_auth.currentUser.uid,
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        dateSaved: new Date(),
+      });
+      // Alert.alert("Rating submitted!");
+      setReviewRating(0);
+      setShowReviewModal(false);
+      setShowReviewModal(false);
+      fetchAverageRating(selectedParkingSpot.id);
+    } catch (e) {
+      // console.error("Error submitting rating:", e);
+      Alert.alert("Something went wrong. Please try again.");
     }
   }
 
@@ -346,7 +416,7 @@ export default function App() {
   const checkDistanceToSpot = useCallback(
     (spot) => {
       // useCallback to only check the distance between the searchCoordinates and parkingSpot if the search destination or filter radius value have changed
-      console.log("recalculating distance for spot:", spot.id); // for testing that each of the 20 spots are being calculated
+      // console.log("recalculating distance for spot:", spot.id); // for testing that each of the 20 spots are being calculated
       return getDistance(
         { latitude: spot.latitude, longitude: spot.longitude }, // the getDistance function from the geolib library that allows us to calculate distance between two points
         {
@@ -392,7 +462,7 @@ export default function App() {
         const data = await response.json(); // await response so that the app doesnt crash while the data is loading
         setAutocompleteSuggestions(data.predictions); // set the autocomplete suggestions to data.predictions, because that is the name which Google structures the JSON object under
       } catch (error) {
-        console.warn("Autocomplete suggestions retrieval error:", error); // error message
+        // console.warn("Autocomplete suggestions retrieval error:", error); // error message
       }
     };
 
@@ -417,7 +487,7 @@ export default function App() {
             onChangeText={handleSearchChange}
             value={searchLocation}
             placeholder="Find your next destination"
-            placeholderTextColor="8A8A8E"
+            placeholderTextColor="#8A8A8E"
             returnKeyType="search"
             onSubmitEditing={() => performSearch(searchLocation)} // bypass the debouncing process with a direct search using searchLocation
           />
@@ -495,12 +565,26 @@ export default function App() {
               latitude: parkingSpot.latitude,
               longitude: parkingSpot.longitude,
             }}
-            title={parkingSpot.type}
-            description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
+            // title={parkingSpot.type}
+            // description={`${parkingSpot.rate} · ${parkingSpot.timeLimit}`}
             onPress={() => handleMarkerPress(parkingSpot)}
           >
-            <View style={styles.mapMarker}>
-              <Text style={styles.mapMarkerText}>{parkingSpot.rate}/hr</Text>
+            <View
+              style={
+                selectedParkingSpot?.id === parkingSpot.id
+                  ? styles.mapMarkerActive
+                  : styles.mapMarker
+              }
+            >
+              <Text
+                style={
+                  selectedParkingSpot?.id === parkingSpot.id
+                    ? styles.mapMarkerTextActive
+                    : styles.mapMarkerText
+                }
+              >
+                {parkingSpot.rate}/hr
+              </Text>
             </View>
           </Marker>
         ))}
@@ -533,14 +617,19 @@ export default function App() {
         style={styles.resetRotationButton}
         onPress={resetMapRotation}
       >
-        <Ionicons name={"arrow-up-outline"} size={30} color={"#6a65fb"} />
+        <Text style={styles.resetRotationButtonText}>N</Text>
+        <Ionicons name={"compass-outline"} size={30} color={"#6a65fb"} />
       </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.userLocationButton}
         onPress={goToUserLocation}
       >
-        <Ionicons name={"locate"} size={30} color={"#6a65fb"} />
+        <Ionicons
+          name={"locate"}
+          size={30}
+          color={currentLocation ? "#6a65fb" : "#7d7d7d"}
+        />
       </TouchableOpacity>
 
       {selectedParkingSpot && (
@@ -570,22 +659,65 @@ export default function App() {
                 onPress={() => saveParkingSpot(selectedParkingSpot)}
               >
                 <Ionicons
-                  name={isSpotSaved ? "bookmark-outline" : "bookmark"}
+                  name={isSpotSaved ? "bookmark" : "bookmark-outline"}
                   size={32}
                   color="#6C63FF"
                 />
               </TouchableOpacity>
             </View>
 
-            {/* Star rating — hardcoded at 4 stars for now, swap with real data later */}
-            {/* <View style={styles.starsRow}>
-              {[1, 2, 3, 4].map((i) => (
-                <Text key={i} style={styles.starFilled}>
-                  ★
+            {/* Averaged Star rating + count */}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginBottom: 6,
+              }}
+            >
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Text
+                    key={i}
+                    style={
+                      i <= spotAverageRating
+                        ? styles.starFilled
+                        : styles.starEmpty
+                    }
+                  >
+                    ★
+                  </Text>
+                ))}
+              </View>
+              <Text style={{ color: "#7d7d7d", fontSize: 13, marginLeft: 6 }}>
+                ({reviewCount} {reviewCount === 1 ? "rating" : "ratings"})
+              </Text>
+            </View>
+
+            {/* See all rating button */}
+            {reviewCount > 0 && (
+              <TouchableOpacity
+                style={{ marginBottom: 10 }}
+                onPress={() => setShowReviewsModal(true)}
+              >
+                <Text
+                  style={{ color: "#807cff", fontSize: 13, fontWeight: "500" }}
+                >
+                  See all ratings →
                 </Text>
-              ))}
-              <Text style={styles.starEmpty}>★</Text>
-            </View> */}
+              </TouchableOpacity>
+            )}
+
+            {/* Rate this spot button */}
+            <TouchableOpacity
+              style={{ alignItems: "center", marginBottom: 8 }}
+              onPress={() => setShowReviewModal(true)}
+            >
+              <Text
+                style={{ color: "#807cff", fontSize: 14, fontWeight: "500" }}
+              >
+                Rate this Spot ★
+              </Text>
+            </TouchableOpacity>
 
             {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
 
@@ -602,21 +734,152 @@ export default function App() {
             >
               <Text style={styles.parkButtonText}>Go Here</Text>
             </Pressable>
-            {/* <Button
-            title="Save Spot"
-            onPress={() => saveParkingSpot(selectedParkingSpot)} // when the "Save Spot" button is pressed, call the saveParkingSpot function with the selected parking spot data to save that spot to the user's saved spots list in Firestore, allowing them to view it later in their saved spots screen
-          /> */}
-
-            {/* Close */}
-            {/* <Pressable
-            style={styles.closeButton}
-            onPress={() => setSelectedParkingSpot(null)}
-          >
-            <Text style={styles.closeButtonText}>Close</Text>
-          </Pressable> */}
           </Animated.View>
         </GestureDetector>
       )}
+
+      {/* ── Rate this Spot Modal ── */}
+      <Modal
+        visible={showReviewModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReviewModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 24,
+              paddingBottom: 40,
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 6 }}>
+              Rate this Spot
+            </Text>
+            <Text style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 20 }}>
+              Tap a star to leave your rating
+            </Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+                marginBottom: 24,
+              }}
+            >
+              {[1, 2, 3, 4, 5].map((i) => (
+                <TouchableOpacity key={i} onPress={() => setReviewRating(i)}>
+                  <Text
+                    style={{
+                      fontSize: 48,
+                      color: i <= reviewRating ? "#807cff" : "#ddd",
+                    }}
+                  >
+                    ★
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#807cff",
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: "center",
+                marginBottom: 10,
+              }}
+              onPress={submitReview}
+            >
+              <Text style={{ color: "white", fontSize: 16, fontWeight: "600" }}>
+                Submit
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ alignItems: "center" }}
+              onPress={() => {
+                setReviewRating(0);
+                setReviewComment("");
+                setShowReviewModal(false);
+              }}
+            >
+              <Text style={{ color: "#aaa", fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* ── See All Ratings Modal ── */}
+      <Modal
+        visible={showReviewsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowReviewsModal(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "flex-end",
+            backgroundColor: "rgba(0,0,0,0.4)",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "white",
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              padding: 24,
+              maxHeight: "60%",
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: "700", marginBottom: 4 }}>
+              All Ratings
+            </Text>
+            <Text style={{ fontSize: 13, color: "#7d7d7d", marginBottom: 16 }}>
+              {reviewCount} {reviewCount === 1 ? "rating" : "ratings"} ·{" "}
+              {spotAverageRating} ★ Avg
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {spotReviews.map((review, index) => (
+                <View
+                  key={index}
+                  style={{
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#f0f0f0",
+                    paddingVertical: 10,
+                  }}
+                >
+                  <View style={{ flexDirection: "row" }}>
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Text
+                        key={i}
+                        style={{
+                          color: i <= review.rating ? "#807cff" : "#ddd",
+                          fontSize: 20,
+                        }}
+                      >
+                        ★
+                      </Text>
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={{ alignItems: "center", paddingTop: 16 }}
+              onPress={() => setShowReviewsModal(false)}
+            >
+              <Text style={{ color: "#aaa", fontSize: 14 }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
