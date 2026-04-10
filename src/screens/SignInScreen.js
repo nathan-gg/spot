@@ -34,7 +34,6 @@ export default function SignInScreen() {
   const auth = firebase_auth;
 
   // this is a Javascript regex (regular expression) which we implemented to make sure that users are entering real emails, this helps prevent spamming and bots from making accounts
-  // const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const isValidEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
     email,
   );
@@ -153,9 +152,9 @@ export default function SignInScreen() {
           onChangeText={setPassword}
         />
 
-        <TouchableOpacity>
+        {/* <TouchableOpacity>
           <Text style={styles.forgotText}>Forgot Password?</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TouchableOpacity
           style={[styles.signUpButton, { opacity: canSignIn ? 1 : 0.4 }]}

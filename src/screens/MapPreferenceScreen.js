@@ -7,7 +7,7 @@ export default function MapPreferenceScreen({ navigation }) {
   const [mapPreference, setMapPreference] = useState("");
 
   async function saveMapPreference(preference) {
-    console.log(preference);
+    // console.log(preference);
     setMapPreference(preference);
     await AsyncStorage.setItem("mapPreference", preference);
     navigation.replace("MainTabs");

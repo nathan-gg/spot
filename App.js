@@ -14,10 +14,8 @@ import SignInScreen from "./src/screens/SignInScreen";
 import MapPreferenceScreen from "./src/screens/MapPreferenceScreen";
 import SplashAnimation from "./src/screens/SplashAnimation";
 
-// import Settings Screen ** FILE NAMES TO BE CHANGED
+// import screens
 import SettingsScreen from "./src/screens/SettingsScreen";
-
-// import MapScreen ** FILE NAMES TO BE CHANGED
 import MapScreen from "./src/screens/MapScreen";
 import SavedScreen from "./src/screens/SavedScreen.js";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -110,7 +108,7 @@ export default function App() {
 
   useEffect(() => {
     async function checkMapPreference() {
-      await AsyncStorage.clear(); // TEMP - remove when done testing*****THIS CLEARS MAP PREFERENC******!!!!!!
+      // await AsyncStorage.clear(); // Used to clear the map preference stored using AsyncStorage during testing
       const preference = await AsyncStorage.getItem("mapPreference");
       setMapPreference(preference);
     }
@@ -141,7 +139,7 @@ export default function App() {
     // onAuthStateChanged sets up a listener.
     // it triggers whenever the user logs in, logs out, or the token refreshes.
     onAuthStateChanged(firebase_auth, (user) => {
-      console.log("user", user);
+      // console.log("user", user);
       // if user is found, 'user' is an object. If logged out, 'user' is null.
       // we update the local state to trigger a re-render of the navigation.
       setUser(user);

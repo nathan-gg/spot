@@ -217,7 +217,7 @@ export default function App() {
           "Location Permission Denied",
           "Enable Location Services in System Settings to use GPS features.",
         );
-        console.log("Permission to access location was denied");
+        // console.log("Permission to access location was denied");
         return; // exit the function early since we don't have permission to access location, preventing any errors that would occur from trying to access location data without permission
       }
 
@@ -234,7 +234,7 @@ export default function App() {
           "Location Not Found",
           "Enable Location Services in System Settings to use GPS features.",
         );
-        console.log("Current location not obtained");
+        // console.log("Current location not obtained");
       }
     })();
   }, []);
@@ -249,7 +249,7 @@ export default function App() {
       ...spot,
       address,
     });
-    console.log("Marker pressed: ", spot);
+    // console.log("Marker pressed: ", spot);
     fetchAverageRating(spot.id); //average rating when spot is selected
   }
 
@@ -535,7 +535,7 @@ export default function App() {
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
-        // showsMyLocationButton
+
         showsUserLocation
         rotateEnabled
         provider={PROVIDER_GOOGLE}
@@ -659,7 +659,7 @@ export default function App() {
                 onPress={() => saveParkingSpot(selectedParkingSpot)}
               >
                 <Ionicons
-                  name={isSpotSaved ? "bookmark" : "bookmark-outline"}
+                  name={isSpotSaved ? "bookmark-outline" : "bookmark"}
                   size={32}
                   color="#6C63FF"
                 />
