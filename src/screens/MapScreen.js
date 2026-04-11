@@ -86,7 +86,7 @@ export default function App() {
   const [showReviewModal, setShowReviewModal] = useState(false); // controls rate this spot modal
   const [reviewRating, setReviewRating] = useState(0); // star rating user selects (1-5)
   const [showReviewsModal, setShowReviewsModal] = useState(false); // controls see all ratings modal
-  // const [reviewComment, setReviewComment] = useState(""); // To Be Added, Comments for Ratings
+  const [reviewComment, setReviewComment] = useState("");
 
   // for tracking the location of objects moved by gestures
   const translateY = useSharedValue(0);
