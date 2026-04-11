@@ -14,7 +14,6 @@ Spot is Vancouver’s new all-in-one parking app. In a city full of congestion, 
   - Google Places API: Place Autocomplete (Legacy) https://developers.google.com/maps/documentation/places/web-service/legacy/autocomplete#PlaceAutocompleteStructuredFormat
 
 - Installations
-  - React Native Bottom Sheet by Gorhom https://gorhom.dev/react-native-bottom-sheet/
   - react-native-maps https://www.npmjs.com/package/react-native-maps
   - Expo Documentation for react-native-maps https://docs.expo.dev/versions/latest/sdk/map-view/
   - Geolib Library by Manuel Bieh https://www.npmjs.com/package/geolib
