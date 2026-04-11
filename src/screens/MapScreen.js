@@ -719,8 +719,6 @@ export default function App() {
               </Text>
             </TouchableOpacity>
 
-            {/* ADD MORE CARD CONTENT HERE (amenities, time limit, etc.) ── */}
-
             {/* Go Here → opens Google Maps or Apple Maps */}
             <Pressable
               style={styles.parkButton}

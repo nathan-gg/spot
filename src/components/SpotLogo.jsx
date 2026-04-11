@@ -1,5 +1,4 @@
 // use the react-native-svg library to create an SVG component for the Spot logo to use throughout the app
-// allows for smoother visuals at all sizes
 import Svg, { Path, Defs, LinearGradient, Stop } from "react-native-svg";
 
 export default function SpotLogo({ width = 150, height = 59 }) {
